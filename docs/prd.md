@@ -511,37 +511,37 @@ These are excluded, but must not be architecturally blocked.
 ---
 
 ## Delivery phases (suggested)
-- **Phase 1 (Weeks 1–3)**: core data model + admin foundation
+- **Phase 1 **: core data model + admin foundation
   - Schema (Client, Challenge, Assignment, AssignmentUsage)
   - Basic CRUD for all entities
   - Admin authentication
   - Client management screen
   - Assignment library basics
-- **Phase 2 (Weeks 4–6)**: challenge management + content editing
+- **Phase 2 **: challenge management + content editing
   - Challenge management screen
   - Rich text editor integration
   - Image upload/management
   - Assignment create/edit
   - Assignment-to-challenge relationship management
-- **Phase 3 (Weeks 7–8)**: participant experience
+- **Phase 3 **: participant experience
   - Public challenge view
   - Public assignment view
   - Password functionality
   - Media embed/playback
   - Navigation flow
-- **Phase 4 (Weeks 9–10)**: advanced admin features
+- **Phase 4 **: advanced admin features
   - Scheduled release
   - Drag/drop reordering
   - Challenge duplication
   - Variant relationships
   - Folder/project organization
-- **Phase 5 (Weeks 11–12)**: analytics + polish
+- **Phase 5 **: analytics + polish
   - Analytics integration
   - Admin preview
   - Visual scaling fixes
   - Performance optimization
   - Bug fixes/refinement
-- **Phase 6 (Week 13)**: deployment + handoff
+- **Phase 6 **: deployment + handoff
   - Deployment documentation
   - Environment setup
   - Migration plan/execution (if needed)
@@ -596,14 +596,3 @@ These are excluded, but must not be architecturally blocked.
 
 Note: avoid storing real passwords inside the PRD. If specific example passwords are needed for testing, keep them in a separate, access-controlled place.
 
----
-
-### Document control
-- **Author**: [Your Name]
-- **Stakeholders**: [Client Team Names]
-- **Review status**: Draft for discussion
-- **Next steps**: technical proposal and architecture discussion
-- **Revision history**
-  - v1.0 (2026-01-05): initial PRD based on client documentation and video walkthroughs
-
-This PRD is a starting point for discussion and proposal development. Technical implementation details and UI/UX designs should be finalized collaboratively with the development team.
