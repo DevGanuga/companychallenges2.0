@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Company Challenges Platform (Rebuild)
 
-## Getting Started
+Web platform for delivering structured learning trajectories (“challenges”) composed of reusable “assignments”, with an admin-focused rebuild to fix reuse/variants and operational independence.
 
-First, run the development server:
+### What’s in this repo
+- **App**: Next.js (App Router) web application.
+- **Docs**: product + engineering docs (see `docs/`).
+
+### Key product constraints
+- **No participant accounts** (anonymous access via URL).
+- **Participant experience unchanged** for this rebuild; focus is admin + architecture improvements.
+
+---
+
+## Quick start
+
+### Prerequisites
+- **Node.js**: `20.x` (see `.nvmrc`)
+- **npm**: comes with Node; use `npm ci` for reproducible installs
+
+### Install
+
+```bash
+npm ci
+```
+
+### Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
+- **dev**: `npm run dev` — start the Next.js dev server
+- **build**: `npm run build` — production build
+- **start**: `npm run start` — run production server locally
+- **lint**: `npm run lint` — ESLint
+- **typecheck**: `npm run typecheck` — TypeScript checks (no emit)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Environment variables
+This project currently runs without required environment variables.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+When env vars are introduced:
+- Create a local file named `.env.local`
+- Use `env.example` as the template
+- Never commit secrets
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Tech stack
+- **Framework**: Next.js
+- **UI**: React
+- **Styling**: Tailwind CSS
+- **Language**: TypeScript
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Repository structure
+- `app/`: Next.js App Router pages/layouts
+- `public/`: static assets
+- `docs/`: product + engineering documentation (start here: `docs/README.md`)
+
+---
+
+## Documentation
+- **PRD**: `docs/prd.md`
+- **Docs index**: `docs/README.md`
+- **Local development**: `docs/development.md`
+- **Deployment / Vercel preview**: `docs/deployment-vercel.md`
+- **Architecture (high-level)**: `docs/architecture.md`
+
+---
+
+## Deployment (Vercel)
+See `docs/deployment-vercel.md` for:
+- Connecting the GitHub repo to Vercel
+- Automatic **Preview Deployments** on pull requests
+- Promoting to production
+
+---
+
+## Contributing / security
+- Contributing guide: `CONTRIBUTING.md`
+- Security policy: `SECURITY.md`
+

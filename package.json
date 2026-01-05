@@ -1,12 +1,17 @@
 {
   "name": "companychallenges2.0",
   "version": "0.1.0",
+  "description": "Company Challenges Platform (rebuild) — Next.js app for delivering learning challenges and managing reusable assignments.",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "16.1.1",
