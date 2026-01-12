@@ -7,12 +7,12 @@ interface ClerkProviderProps {
   children: ReactNode
 }
 
-// TEMPORARY: Set to true to bypass Clerk for demo
-const DEMO_MODE = true
+// Demo mode controlled by environment variable (set NEXT_PUBLIC_DEMO_MODE=true to bypass auth)
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
 export function ClerkProvider({ children }: ClerkProviderProps) {
   // Demo mode: skip Clerk entirely
-  if (DEMO_MODE) {
+  if (isDemoMode) {
     return <>{children}</>
   }
 

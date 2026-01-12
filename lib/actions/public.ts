@@ -280,11 +280,14 @@ export async function getPendingAssignmentUsages(challengeId: string): Promise<{
 
 export type AssignmentNavContext = {
   challenge: {
+    id: string
+    clientId: string
     slug: string
     publicTitle?: string
     internalName: string
     brandColor?: string
   }
+  sprintId?: string
   currentPosition: number
   totalCount: number
   prevAssignment?: { slug: string; title: string }
@@ -343,7 +346,7 @@ export async function getAssignmentWithContext(
     // Get the challenge
     const { data: challenge, error: challengeError } = await supabase
       .from('challenges')
-      .select('id, slug, public_title, internal_name, brand_color')
+      .select('id, client_id, slug, public_title, internal_name, brand_color')
       .eq('slug', challengeSlug)
       .eq('is_archived', false)
       .single()
@@ -368,6 +371,7 @@ export async function getAssignmentWithContext(
         id,
         position,
         release_at,
+        sprint_id,
         assignment:assignments (
           id,
           slug,
@@ -453,11 +457,14 @@ export async function getAssignmentWithContext(
         releaseAt: currentUsage.release_at || undefined,
         navContext: {
           challenge: {
+            id: challenge.id,
+            clientId: challenge.client_id,
             slug: challenge.slug,
             publicTitle: challenge.public_title || undefined,
             internalName: challenge.internal_name,
             brandColor: challenge.brand_color || undefined
           },
+          sprintId: currentUsage.sprint_id || undefined,
           currentPosition: releasedIndex + 1,
           totalCount: releasedUsages.length,
           prevAssignment,

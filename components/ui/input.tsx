@@ -16,7 +16,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm font-medium text-[var(--color-fg)]"
+            className="text-sm font-medium text-[var(--color-fg)] transition-colors"
           >
             {label}
           </label>
@@ -25,14 +25,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'h-10 w-full rounded-[var(--radius-md)] border px-3 text-sm transition-colors',
-            'bg-[var(--color-bg)] text-[var(--color-fg)]',
+            'h-10 w-full rounded-[var(--radius-lg)] border px-3 text-sm',
+            'transition-all duration-150 ease-out',
+            'bg-[var(--color-bg)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]',
             'placeholder:text-[var(--color-fg-subtle)]',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            'disabled:cursor-not-allowed disabled:opacity-50',
+            'hover:border-[var(--color-border-hover)]',
+            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--color-bg-muted)]',
             error
-              ? 'border-[var(--color-error)] focus:ring-[var(--color-error)]/30'
-              : 'border-[var(--color-border)] focus:border-[var(--color-border-focus)] focus:ring-[var(--color-border-focus)]/30',
+              ? 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]/20 focus:shadow-[var(--shadow-sm)]'
+              : 'border-[var(--color-border)] focus:border-[var(--color-border-focus)] focus:ring-[var(--color-accent-subtle)] focus:shadow-[var(--shadow-sm)]',
             className
           )}
           aria-invalid={error ? 'true' : undefined}
@@ -40,7 +42,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p id={`${inputId}-error`} className="text-sm text-[var(--color-error)]">
+          <p id={`${inputId}-error`} className="text-sm text-[var(--color-error)] animate-slide-up">
             {error}
           </p>
         )}

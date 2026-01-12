@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PasswordGate } from '@/components/public/password-gate'
+import { trackAssignmentView, trackAssignmentComplete, trackMediaPlay } from '@/lib/actions/analytics'
 import type { Assignment } from '@/lib/types/database'
 import type { AssignmentNavContext } from '@/lib/actions/public'
 
@@ -26,9 +27,48 @@ export function AssignmentPageClient({
 }: AssignmentPageClientProps) {
   const router = useRouter()
   const [hasAccess, setHasAccess] = useState(initialHasAccess)
+  const hasTrackedView = useRef(false)
+  const hasTrackedMediaPlay = useRef(false)
 
   const title = assignment.public_title || assignment.internal_title
   const challengeSlug = navContext?.challenge.slug
+
+  // Track assignment view on mount (once, only if released and has access)
+  useEffect(() => {
+    if (hasTrackedView.current) return
+    if (!navContext || !isReleased || (requiresPassword && !hasAccess)) return
+
+    hasTrackedView.current = true
+    trackAssignmentView(
+      navContext.challenge.clientId,
+      navContext.challenge.id,
+      assignment.id,
+      navContext.sprintId
+    )
+  }, [navContext, isReleased, requiresPassword, hasAccess, assignment.id])
+
+  // Handler for tracking completion when user clicks "Complete"
+  const handleComplete = () => {
+    if (!navContext) return
+    trackAssignmentComplete(
+      navContext.challenge.clientId,
+      navContext.challenge.id,
+      assignment.id,
+      navContext.sprintId
+    )
+  }
+
+  // Handler for tracking media play
+  const handleMediaPlay = () => {
+    if (hasTrackedMediaPlay.current || !navContext) return
+    hasTrackedMediaPlay.current = true
+    trackMediaPlay(
+      navContext.challenge.clientId,
+      navContext.challenge.id,
+      assignment.id,
+      { mediaType: assignment.media_url?.includes('youtube') ? 'youtube' : assignment.media_url?.includes('vimeo') ? 'vimeo' : 'video' }
+    )
+  }
 
   // Show password gate if required and not yet verified
   if (requiresPassword && !hasAccess) {
@@ -40,6 +80,10 @@ export function AssignmentPageClient({
           setHasAccess(true)
           router.refresh()
         }}
+        analyticsContext={navContext ? {
+          clientId: navContext.challenge.clientId,
+          challengeId: navContext.challenge.id
+        } : undefined}
       />
     )
   }
@@ -167,6 +211,7 @@ export function AssignmentPageClient({
                   className="h-full w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
+                  onLoad={handleMediaPlay}
                 />
               ) : isVimeoUrl(assignment.media_url) ? (
                 <iframe
@@ -174,12 +219,14 @@ export function AssignmentPageClient({
                   className="h-full w-full"
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
+                  onLoad={handleMediaPlay}
                 />
               ) : (
                 <video
                   src={assignment.media_url}
                   controls
                   className="h-full w-full"
+                  onPlay={handleMediaPlay}
                 />
               )}
             </div>
@@ -232,6 +279,7 @@ export function AssignmentPageClient({
               {/* Complete / Return to Overview */}
               <Link
                 href={`/c/${challengeSlug}`}
+                onClick={handleComplete}
                 className="inline-flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium text-white transition-colors"
                 style={{ backgroundColor: navContext.challenge.brandColor || 'var(--color-accent)' }}
               >

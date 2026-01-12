@@ -2,15 +2,21 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { verifyAssignmentPassword } from '@/lib/actions/public'
+import { trackPasswordAttempt } from '@/lib/actions/analytics'
 import { cn } from '@/lib/utils/cn'
 
 interface PasswordGateProps {
   assignmentId: string
   assignmentTitle: string
   onSuccess: () => void
+  // Analytics context (optional - only tracked if provided)
+  analyticsContext?: {
+    clientId: string
+    challengeId: string
+  }
 }
 
-export function PasswordGate({ assignmentId, assignmentTitle, onSuccess }: PasswordGateProps) {
+export function PasswordGate({ assignmentId, assignmentTitle, onSuccess, analyticsContext }: PasswordGateProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [retryAfter, setRetryAfter] = useState<number | null>(null)
@@ -47,6 +53,16 @@ export function PasswordGate({ assignmentId, assignmentTitle, onSuccess }: Passw
 
     startTransition(async () => {
       const result = await verifyAssignmentPassword(assignmentId, password)
+
+      // Track password attempt if analytics context provided
+      if (analyticsContext) {
+        trackPasswordAttempt(
+          analyticsContext.clientId,
+          analyticsContext.challengeId,
+          assignmentId,
+          result.success
+        )
+      }
 
       if (result.success) {
         onSuccess()

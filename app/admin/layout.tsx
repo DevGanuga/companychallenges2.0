@@ -10,6 +10,7 @@ const navigation = [
   { name: 'Clients', href: '/admin/clients', icon: BuildingIcon },
   { name: 'Challenges', href: '/admin/challenges', icon: FlagIcon },
   { name: 'Assignments', href: '/admin/assignments', icon: FileTextIcon },
+  { name: 'Analytics', href: '/admin/analytics', icon: ChartIcon },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -18,13 +19,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)] lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg)] lg:flex">
         {/* Logo */}
-        <div className="flex h-16 items-center gap-2 border-b border-[var(--color-border)] px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)] text-[var(--color-accent-fg)]">
+        <div className="flex h-16 items-center gap-3 border-b border-[var(--color-border)] px-6">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--gradient-primary)] text-white shadow-[var(--shadow-sm)]">
             <span className="text-sm font-bold">CC</span>
           </div>
-          <span className="text-lg font-semibold text-[var(--color-fg)]">Challenges</span>
+          <span className="text-lg font-bold text-[var(--color-fg)]">Challenges</span>
         </div>
 
         {/* Navigation */}
@@ -36,14 +37,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-colors',
+                  'group flex items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-sm font-medium transition-all duration-150',
                   isActive
-                    ? 'bg-[var(--color-accent-subtle)] text-[var(--color-accent)]'
+                    ? 'bg-[var(--color-accent-subtle)] text-[var(--color-accent)] shadow-[var(--shadow-xs)]'
                     : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-fg)]'
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={cn(
+                  'h-5 w-5 transition-transform duration-200',
+                  !isActive && 'group-hover:scale-110'
+                )} />
                 {item.name}
+                {isActive && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+                )}
               </Link>
             )
           })}
@@ -51,7 +58,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Footer - User Menu */}
         <div className="border-t border-[var(--color-border)] p-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 p-2 rounded-[var(--radius-lg)] transition-colors hover:bg-[var(--color-bg-muted)]">
             <DemoUserButton afterSignOutUrl="/" />
             <div className="flex-1 truncate">
               <p className="text-sm font-medium text-[var(--color-fg)]">Account</p>
@@ -120,6 +127,14 @@ function MenuIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    </svg>
+  )
+}
+
+function ChartIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
     </svg>
   )
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 
-// TEMPORARY: Match this with clerk-provider.tsx
-const DEMO_MODE = true
+// Demo mode controlled by environment variable (matches clerk-provider.tsx)
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
 interface DemoUserButtonProps {
   afterSignOutUrl?: string
@@ -23,7 +23,7 @@ export function DemoUserButton({ afterSignOutUrl }: DemoUserButtonProps) {
 
   useEffect(() => {
     // In demo mode, don't even try to load Clerk
-    if (DEMO_MODE) {
+    if (isDemoMode) {
       return
     }
 
@@ -38,7 +38,7 @@ export function DemoUserButton({ afterSignOutUrl }: DemoUserButtonProps) {
   }, [])
 
   // Demo mode or error: show placeholder
-  if (DEMO_MODE || error || !UserButton) {
+  if (isDemoMode || error || !UserButton) {
     return <PlaceholderAvatar />
   }
 

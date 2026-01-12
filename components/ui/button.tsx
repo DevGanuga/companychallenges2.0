@@ -15,25 +15,27 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         className={cn(
           // Base styles
-          'inline-flex items-center justify-center gap-2 font-medium transition-colors',
+          'inline-flex items-center justify-center gap-2 font-medium',
+          'transition-all duration-150 ease-out',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
           'disabled:pointer-events-none disabled:opacity-50',
+          'active:scale-[0.98]',
           // Variants
           {
-            'bg-[var(--color-accent)] text-[var(--color-accent-fg)] hover:bg-[var(--color-accent-hover)] focus-visible:ring-[var(--color-accent)]':
+            'bg-[var(--gradient-primary)] text-[var(--color-accent-fg)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:shadow-[var(--color-accent)]/20 hover:-translate-y-px focus-visible:ring-[var(--color-accent)]':
               variant === 'primary',
-            'bg-[var(--color-bg-muted)] text-[var(--color-fg)] hover:bg-[var(--color-border)] focus-visible:ring-[var(--color-border)]':
+            'bg-[var(--color-bg)] text-[var(--color-fg)] border border-[var(--color-border)] shadow-[var(--shadow-xs)] hover:bg-[var(--color-bg-subtle)] hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-sm)] focus-visible:ring-[var(--color-border)]':
               variant === 'secondary',
-            'bg-transparent text-[var(--color-fg)] hover:bg-[var(--color-bg-muted)] focus-visible:ring-[var(--color-border)]':
+            'bg-transparent text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-fg)] focus-visible:ring-[var(--color-border)]':
               variant === 'ghost',
-            'bg-[var(--color-error)] text-white hover:bg-[var(--color-error)]/90 focus-visible:ring-[var(--color-error)]':
+            'bg-[var(--color-error)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--color-error)]/90 hover:shadow-[var(--shadow-md)] focus-visible:ring-[var(--color-error)]':
               variant === 'destructive',
           },
           // Sizes
           {
             'h-8 px-3 text-sm rounded-[var(--radius-md)]': size === 'sm',
-            'h-10 px-4 text-sm rounded-[var(--radius-md)]': size === 'md',
-            'h-12 px-6 text-base rounded-[var(--radius-lg)]': size === 'lg',
+            'h-10 px-4 text-sm rounded-[var(--radius-lg)]': size === 'md',
+            'h-12 px-6 text-base rounded-[var(--radius-xl)]': size === 'lg',
           },
           className
         )}
