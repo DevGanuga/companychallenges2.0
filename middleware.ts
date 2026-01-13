@@ -2,8 +2,8 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Check if demo mode is enabled (set DEMO_MODE=true in .env.local to bypass auth)
-const isDemoMode = process.env.DEMO_MODE === 'true'
+// Check if demo mode is enabled (set NEXT_PUBLIC_DEMO_MODE=true in .env.local to bypass auth)
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
 // Define protected routes
 const isAdminRoute = createRouteMatcher(['/admin(.*)'])

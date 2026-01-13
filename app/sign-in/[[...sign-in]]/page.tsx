@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
-// TEMPORARY: Set to true to bypass Clerk for demo
-const DEMO_MODE = true
+// Use environment variable for demo mode (matches middleware)
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
 export default function SignInPage() {
   const [ClerkSignIn, setClerkSignIn] = useState<React.ComponentType<any> | null>(null)
