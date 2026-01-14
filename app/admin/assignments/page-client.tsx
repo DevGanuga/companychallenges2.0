@@ -27,11 +27,6 @@ export function AssignmentsPageClient({
   const [usageFilter, setUsageFilter] = useState<UsageFilter>('all')
   const [contentTypeFilter, setContentTypeFilter] = useState<ContentTypeFilter>('')
 
-  const handleAddClick = () => {
-    setEditingAssignment(null)
-    setIsFormOpen(true)
-  }
-
   const handleEditClick = (assignment: AssignmentWithUsages) => {
     setEditingAssignment(assignment)
     setIsFormOpen(true)
@@ -93,13 +88,9 @@ export function AssignmentsPageClient({
         <div>
           <h1 className="text-2xl font-semibold text-[var(--color-fg)]">Assignment Library</h1>
           <p className="mt-1 text-[var(--color-fg-muted)]">
-            Browse and manage reusable content units.
+            Assignments saved for reuse across challenges. Create new assignments from the challenge page.
           </p>
         </div>
-        <Button onClick={handleAddClick}>
-          <PlusIcon className="h-4 w-4" />
-          Create Assignment
-        </Button>
       </div>
 
       {initialError && (
@@ -137,9 +128,9 @@ export function AssignmentsPageClient({
       {filteredAssignments.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>All Assignments</CardTitle>
+            <CardTitle>Saved Assignments</CardTitle>
             <CardDescription>
-              {filteredAssignments.length} assignment{filteredAssignments.length !== 1 ? 's' : ''}
+              {filteredAssignments.length} assignment{filteredAssignments.length !== 1 ? 's' : ''} in your library
               {searchQuery && ` matching "${searchQuery}"`}
             </CardDescription>
           </CardHeader>
@@ -154,27 +145,21 @@ export function AssignmentsPageClient({
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>All Assignments</CardTitle>
-            <CardDescription>Standalone content units that can be reused across challenges.</CardDescription>
+            <CardTitle>Saved Assignments</CardTitle>
+            <CardDescription>Reusable content units saved from your challenges.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex min-h-[200px] items-center justify-center text-[var(--color-fg-muted)]">
               <div className="text-center">
                 <FileTextIcon className="mx-auto h-12 w-12 text-[var(--color-fg-subtle)]" />
                 <h3 className="mt-4 text-lg font-medium text-[var(--color-fg)]">
-                  {initialAssignments.length === 0 ? 'No assignments yet' : 'No matching assignments'}
+                  {initialAssignments.length === 0 ? 'Library is empty' : 'No matching assignments'}
                 </h3>
-                <p className="mt-1 text-sm">
+                <p className="mt-1 text-sm max-w-sm">
                   {initialAssignments.length === 0
-                    ? 'Create your first assignment to build your content library.'
+                    ? 'Create assignments from the challenge page and check "Save for future reference" to add them here.'
                     : 'Try adjusting your search or filters.'}
                 </p>
-                {initialAssignments.length === 0 && (
-                  <Button className="mt-4" variant="secondary" onClick={handleAddClick}>
-                    <PlusIcon className="h-4 w-4" />
-                    Create Assignment
-                  </Button>
-                )}
               </div>
             </div>
           </CardContent>
@@ -188,14 +173,6 @@ export function AssignmentsPageClient({
         onSuccess={handleSuccess}
       />
     </div>
-  )
-}
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-    </svg>
   )
 }
 

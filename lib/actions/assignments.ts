@@ -23,6 +23,7 @@ export async function getAssignments(options?: {
   search?: string
   contentType?: string
   usageFilter?: 'used' | 'unused' | 'all'
+  reusableOnly?: boolean // filter to only show library assignments
 }): Promise<AssignmentsListResult> {
   try {
     const supabase = createAdminClient()
@@ -46,6 +47,11 @@ export async function getAssignments(options?: {
         micro_quizzes (*)
       `)
       .order('internal_title', { ascending: true })
+
+    // Filter to reusable (library) assignments only
+    if (options?.reusableOnly) {
+      query = query.eq('is_reusable', true)
+    }
 
     if (options?.contentType) {
       query = query.eq('content_type', options.contentType)
@@ -235,6 +241,7 @@ export async function createAssignment(input: AssignmentInsert): Promise<Assignm
         media_url: input.media_url ?? null,
         password_hash: passwordHash,
         content_type: input.content_type ?? 'standard',
+        is_reusable: input.is_reusable ?? true, // default to true (saved for future reference)
       })
       .select()
       .single()
@@ -248,6 +255,82 @@ export async function createAssignment(input: AssignmentInsert): Promise<Assignm
     return { success: true, data: data as Assignment }
   } catch (err) {
     console.error('Unexpected error creating assignment:', err)
+    return { success: false, error: 'Failed to create assignment' }
+  }
+}
+
+/**
+ * Create a new assignment within a challenge context
+ * Creates both the assignment and its usage in one transaction
+ */
+export async function createAssignmentForChallenge(
+  input: AssignmentInsert,
+  challengeId: string,
+  sprintId?: string | null
+): Promise<AssignmentActionResult> {
+  try {
+    const supabase = createAdminClient()
+
+    const slug = input.slug || await generateUniqueSlug(input.internal_title)
+    const passwordHash = input.password ? await hashPassword(input.password) : null
+
+    // Create the assignment
+    const { data: assignment, error: assignmentError } = await supabase
+      .from('assignments')
+      .insert({
+        slug,
+        internal_title: input.internal_title,
+        public_title: input.public_title ?? null,
+        subtitle: input.subtitle ?? null,
+        description: input.description ?? null,
+        visual_url: input.visual_url ?? null,
+        media_url: input.media_url ?? null,
+        password_hash: passwordHash,
+        content_type: input.content_type ?? 'standard',
+        is_reusable: input.is_reusable ?? true,
+      })
+      .select()
+      .single()
+
+    if (assignmentError || !assignment) {
+      console.error('Error creating assignment:', assignmentError)
+      return { success: false, error: assignmentError?.message || 'Failed to create assignment' }
+    }
+
+    // Get the max position for this challenge
+    const { data: maxPosition } = await supabase
+      .from('assignment_usages')
+      .select('position')
+      .eq('challenge_id', challengeId)
+      .order('position', { ascending: false })
+      .limit(1)
+      .single()
+
+    const nextPosition = (maxPosition?.position ?? -1) + 1
+
+    // Create the assignment usage
+    const { error: usageError } = await supabase
+      .from('assignment_usages')
+      .insert({
+        challenge_id: challengeId,
+        sprint_id: sprintId ?? null,
+        assignment_id: assignment.id,
+        position: nextPosition,
+        is_visible: true,
+      })
+
+    if (usageError) {
+      console.error('Error creating assignment usage:', usageError)
+      // Try to clean up the assignment if usage creation failed
+      await supabase.from('assignments').delete().eq('id', assignment.id)
+      return { success: false, error: usageError.message }
+    }
+
+    revalidatePath('/admin/assignments')
+    revalidatePath(`/admin/challenges/${challengeId}`)
+    return { success: true, data: assignment as Assignment }
+  } catch (err) {
+    console.error('Unexpected error creating assignment for challenge:', err)
     return { success: false, error: 'Failed to create assignment' }
   }
 }
@@ -269,6 +352,7 @@ export async function updateAssignment(id: string, input: AssignmentUpdate): Pro
     if (input.visual_url !== undefined) updateData.visual_url = input.visual_url
     if (input.media_url !== undefined) updateData.media_url = input.media_url
     if (input.content_type !== undefined) updateData.content_type = input.content_type
+    if (input.is_reusable !== undefined) updateData.is_reusable = input.is_reusable
 
     // Handle password update
     if (input.password !== undefined) {
@@ -297,6 +381,106 @@ export async function updateAssignment(id: string, input: AssignmentUpdate): Pro
   } catch (err) {
     console.error('Unexpected error updating assignment:', err)
     return { success: false, error: 'Failed to update assignment' }
+  }
+}
+
+/**
+ * Create a version (independent copy) of an assignment and link to challenge
+ * Creates variant relationship for tracking
+ */
+export async function createAssignmentVersion(
+  sourceAssignmentId: string,
+  challengeId: string,
+  relationshipLabel: string = 'Version',
+  sprintId?: string | null
+): Promise<AssignmentActionResult> {
+  try {
+    const supabase = createAdminClient()
+
+    // Get the source assignment
+    const { data: source, error: fetchError } = await supabase
+      .from('assignments')
+      .select('*')
+      .eq('id', sourceAssignmentId)
+      .single()
+
+    if (fetchError || !source) {
+      return { success: false, error: 'Source assignment not found' }
+    }
+
+    // Create new slug for the version
+    const newSlug = await generateUniqueSlug(`${source.internal_title} version`)
+
+    // Create the new assignment (version)
+    const { data: newAssignment, error: createError } = await supabase
+      .from('assignments')
+      .insert({
+        slug: newSlug,
+        internal_title: `${source.internal_title} (${relationshipLabel})`,
+        public_title: source.public_title,
+        subtitle: source.subtitle,
+        description: source.description,
+        visual_url: source.visual_url,
+        media_url: source.media_url,
+        password_hash: null, // Don't copy password
+        content_type: source.content_type,
+        is_reusable: true,
+      })
+      .select()
+      .single()
+
+    if (createError || !newAssignment) {
+      console.error('Error creating assignment version:', createError)
+      return { success: false, error: createError?.message || 'Failed to create version' }
+    }
+
+    // Create variant relationship
+    const { error: variantError } = await supabase
+      .from('assignment_variants')
+      .insert({
+        source_assignment_id: sourceAssignmentId,
+        target_assignment_id: newAssignment.id,
+        relationship_label: relationshipLabel,
+      })
+
+    if (variantError) {
+      console.error('Error creating variant relationship:', variantError)
+      // Don't fail, just log - the assignment was still created
+    }
+
+    // Get the max position for this challenge
+    const { data: maxPosition } = await supabase
+      .from('assignment_usages')
+      .select('position')
+      .eq('challenge_id', challengeId)
+      .order('position', { ascending: false })
+      .limit(1)
+      .single()
+
+    const nextPosition = (maxPosition?.position ?? -1) + 1
+
+    // Create the assignment usage
+    const { error: usageError } = await supabase
+      .from('assignment_usages')
+      .insert({
+        challenge_id: challengeId,
+        sprint_id: sprintId ?? null,
+        assignment_id: newAssignment.id,
+        position: nextPosition,
+        is_visible: true,
+      })
+
+    if (usageError) {
+      console.error('Error creating assignment usage for version:', usageError)
+      // Don't fail, the version was still created
+    }
+
+    revalidatePath('/admin/assignments')
+    revalidatePath(`/admin/challenges/${challengeId}`)
+    return { success: true, data: newAssignment as Assignment }
+  } catch (err) {
+    console.error('Unexpected error creating assignment version:', err)
+    return { success: false, error: 'Failed to create assignment version' }
   }
 }
 

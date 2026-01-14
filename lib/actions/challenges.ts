@@ -181,6 +181,7 @@ export async function createChallenge(input: ChallengeInsert): Promise<Challenge
     }
 
     revalidatePath('/admin/challenges')
+    revalidatePath(`/admin/clients/${input.client_id}`)
     return { success: true, data: data as Challenge }
   } catch (err) {
     console.error('Unexpected error creating challenge:', err)

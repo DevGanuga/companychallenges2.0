@@ -63,24 +63,25 @@ export async function getClient(id: string): Promise<ClientActionResult> {
 
 /**
  * Create a new client
+ * All features are enabled by default - feature control happens at challenge level
  */
 export async function createClient(input: ClientInsert): Promise<ClientActionResult> {
   try {
     const supabase = createAdminClient()
 
-    // Merge features with defaults
+    // All features enabled by default
     const features = {
-      announcements: false,
-      host_videos: false,
-      sprint_structure: false,
-      collective_progress: false,
-      time_based_unlocks: false,
-      milestones: false,
-      reveal_moments: false,
-      micro_quizzes: false,
-      progress_tracking: false,
-      session_persistence: false,
-      private_views: false,
+      announcements: true,
+      host_videos: true,
+      sprint_structure: true,
+      collective_progress: true,
+      time_based_unlocks: true,
+      milestones: true,
+      reveal_moments: true,
+      micro_quizzes: true,
+      progress_tracking: true,
+      session_persistence: true,
+      private_views: true,
       ...input.features,
     }
 

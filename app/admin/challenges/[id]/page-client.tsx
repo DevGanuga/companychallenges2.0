@@ -30,7 +30,7 @@ import {
   Badge,
   Spinner,
 } from '@/components/ui'
-import { AssignmentPicker, AssignmentUsageEditor, SprintForm, SprintList, AnnouncementForm, AnnouncementList, MilestoneForm, MilestoneList, MicroQuizEditor } from '@/components/admin'
+import { AssignmentPicker, AssignmentUsageEditor, SprintForm, SprintList, AnnouncementForm, AnnouncementList, MilestoneForm, MilestoneList, MicroQuizEditor, AssignmentForm } from '@/components/admin'
 import {
   addAssignmentToChallenge,
   removeAssignmentFromChallenge,
@@ -78,6 +78,7 @@ export function ChallengeDetailClient({
   const [announcements, setAnnouncements] = useState(initialAnnouncements)
   const [milestones, setMilestones] = useState(initialMilestones)
   const [isPickerOpen, setIsPickerOpen] = useState(false)
+  const [isAssignmentFormOpen, setIsAssignmentFormOpen] = useState(false)
   const [editingUsage, setEditingUsage] = useState<AssignmentUsageWithAssignment | null>(null)
   const [isSprintFormOpen, setIsSprintFormOpen] = useState(false)
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null)
@@ -247,8 +248,12 @@ export function ChallengeDetailClient({
       {/* Header with breadcrumb */}
       <div className="mb-6">
         <nav className="mb-2 text-sm text-[var(--color-fg-muted)]">
-          <Link href="/admin/challenges" className="hover:text-[var(--color-primary)]">
-            Challenges
+          <Link href="/admin/clients" className="hover:text-[var(--color-primary)]">
+            Clients
+          </Link>
+          <span className="mx-2">/</span>
+          <Link href={`/admin/clients/${challenge.client_id}`} className="hover:text-[var(--color-primary)]">
+            {challenge.client.name}
           </Link>
           <span className="mx-2">/</span>
           <span className="text-[var(--color-fg)]">{challenge.internal_name}</span>
@@ -258,31 +263,20 @@ export function ChallengeDetailClient({
             <h1 className="text-2xl font-semibold text-[var(--color-fg)]">
               {challenge.internal_name}
             </h1>
-            <p className="mt-1 text-[var(--color-fg-muted)]">
-              {challenge.client.name}
-              {challenge.public_title && (
-                <span className="ml-2 text-[var(--color-fg-subtle)]">
-                  ({challenge.public_title})
-                </span>
-              )}
-            </p>
+            {challenge.public_title && (
+              <p className="mt-1 text-[var(--color-fg-muted)]">
+                {challenge.public_title}
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => setIsMilestoneFormOpen(true)}>
-              <TrophyIcon className="h-4 w-4" />
-              Milestone
-            </Button>
-            <Button variant="secondary" onClick={() => setIsAnnouncementFormOpen(true)}>
-              <MegaphoneIcon className="h-4 w-4" />
-              Announcement
-            </Button>
-            <Button variant="secondary" onClick={() => setIsSprintFormOpen(true)}>
-              <LayersIcon className="h-4 w-4" />
-              Sprint
+            <Button variant="secondary" onClick={() => setIsAssignmentFormOpen(true)}>
+              <PlusIcon className="h-4 w-4" />
+              Create New
             </Button>
             <Button variant="secondary" onClick={() => setIsPickerOpen(true)}>
-              <PlusIcon className="h-4 w-4" />
-              Assignment
+              <LibraryIcon className="h-4 w-4" />
+              From Library
             </Button>
           </div>
         </div>
@@ -499,12 +493,18 @@ export function ChallengeDetailClient({
                   No assignments yet
                 </h3>
                 <p className="mt-1 text-sm">
-                  Add assignments from your library to build this challenge.
+                  Create a new assignment or pick from your library.
                 </p>
-                <Button className="mt-4" variant="secondary" onClick={() => setIsPickerOpen(true)}>
-                  <PlusIcon className="h-4 w-4" />
-                  Add Assignment
-                </Button>
+                <div className="mt-4 flex justify-center gap-2">
+                  <Button variant="secondary" onClick={() => setIsAssignmentFormOpen(true)}>
+                    <PlusIcon className="h-4 w-4" />
+                    Create New
+                  </Button>
+                  <Button variant="secondary" onClick={() => setIsPickerOpen(true)}>
+                    <LibraryIcon className="h-4 w-4" />
+                    From Library
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -516,6 +516,7 @@ export function ChallengeDetailClient({
         open={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
         assignments={availableAssignments}
+        challengeId={challenge.id}
         onSelect={handleAddAssignment}
         loading={actionId !== null}
       />
@@ -563,6 +564,14 @@ export function ChallengeDetailClient({
         usage={quizEditorUsage}
         open={!!quizEditorUsage}
         onClose={() => setQuizEditorUsage(null)}
+      />
+
+      {/* Assignment Form Dialog */}
+      <AssignmentForm
+        challengeId={challenge.id}
+        open={isAssignmentFormOpen}
+        onClose={() => setIsAssignmentFormOpen(false)}
+        onSuccess={handleEditSuccess}
       />
     </div>
   )
@@ -791,6 +800,14 @@ function QuizIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+    </svg>
+  )
+}
+
+function LibraryIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
     </svg>
   )
 }

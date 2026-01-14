@@ -7,12 +7,11 @@ import { cn } from '@/lib/utils/cn'
 import { DemoUserButton } from '@/components/admin/demo-user-button'
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: HomeIcon, emoji: '🏠' },
-  { name: 'Clients', href: '/admin/clients', icon: BuildingIcon, emoji: '🏢' },
-  { name: 'Challenges', href: '/admin/challenges', icon: FlagIcon, emoji: '🚀' },
-  { name: 'Assignments', href: '/admin/assignments', icon: FileTextIcon, emoji: '📝' },
-  { name: 'Analytics', href: '/admin/analytics', icon: ChartIcon, emoji: '📊' },
-  { name: 'Settings', href: '/admin/settings', icon: SettingsIcon, emoji: '⚙️' },
+  { name: 'Dashboard', href: '/admin', icon: HomeIcon },
+  { name: 'Clients', href: '/admin/clients', icon: BuildingIcon },
+  { name: 'Assignments', href: '/admin/assignments', icon: FileTextIcon },
+  { name: 'Analytics', href: '/admin/analytics', icon: ChartIcon },
+  { name: 'Settings', href: '/admin/settings', icon: SettingsIcon },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

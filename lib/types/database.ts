@@ -107,10 +107,13 @@ export interface Assignment {
   visual_url: string | null
   media_url: string | null // embedded video URL
   password_hash: string | null // hashed shared access key
-  
+
   // Content type
   content_type: 'standard' | 'quiz' | 'video' | 'announcement'
-  
+
+  // Library visibility
+  is_reusable: boolean // when true, appears in library for reuse
+
   created_at: string
   updated_at: string
 }
@@ -424,6 +427,7 @@ export interface AssignmentInsert {
   media_url?: string | null
   password?: string // plain text, will be hashed
   content_type?: 'standard' | 'quiz' | 'video' | 'announcement'
+  is_reusable?: boolean // defaults to true (saved for future reference)
 }
 
 export interface AssignmentUpdate {
@@ -436,6 +440,7 @@ export interface AssignmentUpdate {
   media_url?: string | null
   password?: string | null // plain text or null to remove
   content_type?: 'standard' | 'quiz' | 'video' | 'announcement'
+  is_reusable?: boolean
 }
 
 export interface AssignmentUsageInsert {
