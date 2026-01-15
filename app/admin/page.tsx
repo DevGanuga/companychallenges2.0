@@ -77,7 +77,6 @@ export default async function AdminDashboard() {
                   href="/admin/clients"
                   icon={<PlusCircleIcon />}
                   color="coral"
-                  badge="Popular"
                 />
                 <QuickAction
                   title="Build a Challenge"
