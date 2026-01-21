@@ -216,7 +216,7 @@ function SortableSprintItem({
             <span>{assignmentCount} assignment{assignmentCount !== 1 ? 's' : ''}</span>
             {sprint.starts_at && (
               <span>
-                Starts: {new Date(sprint.starts_at).toLocaleDateString()}
+                Starts: {formatDate(sprint.starts_at)}
               </span>
             )}
           </div>
@@ -252,4 +252,10 @@ function GripIcon({ className }: { className?: string }) {
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
     </svg>
   )
+}
+
+function formatDate(isoString: string): string {
+  const date = new Date(isoString)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
 }

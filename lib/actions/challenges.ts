@@ -156,44 +156,32 @@ export async function createChallenge(input: ChallengeInsert): Promise<Challenge
     // Generate slug if not provided
     const slug = input.slug || await generateUniqueSlug(input.internal_name)
 
-    // Default features
-    const defaultFeatures = {
-      announcements: true,
-      host_videos: true,
-      sprint_structure: true,
-      collective_progress: false,
-      time_based_unlocks: true,
-      milestones: false,
-      reveal_moments: false,
-      micro_quizzes: false,
-      progress_tracking: false,
-      session_persistence: false,
-      private_views: false,
+    const insertData: Record<string, unknown> = {
+      client_id: input.client_id,
+      slug,
+      internal_name: input.internal_name,
+      public_title: input.public_title ?? null,
+      show_public_title: input.show_public_title ?? true,
+      // New JSON content format
+      description_json: input.description_json ?? null,
+      description_html: input.description_html ?? null,
+      // Legacy fields (kept for backward compatibility)
+      description: input.description ?? null,
+      brand_color: input.brand_color ?? null,
+      support_info: input.support_info ?? null,
+      visual_url: input.visual_url ?? null,
+      folder: input.folder ?? null,
+      starts_at: input.starts_at ?? null,
+      ends_at: input.ends_at ?? null,
     }
+
+    // Add mode and features if provided
+    if (input.mode !== undefined) insertData.mode = input.mode
+    if (input.features !== undefined) insertData.features = input.features
 
     const { data, error } = await supabase
       .from('challenges')
-      .insert({
-        client_id: input.client_id,
-        slug,
-        internal_name: input.internal_name,
-        public_title: input.public_title ?? null,
-        show_public_title: input.show_public_title ?? true,
-        // Mode and features
-        mode: input.mode ?? 'collective',
-        features: { ...defaultFeatures, ...input.features },
-        // New JSON content format
-        description_json: input.description_json ?? null,
-        description_html: input.description_html ?? null,
-        // Legacy fields (kept for backward compatibility)
-        description: input.description ?? null,
-        brand_color: input.brand_color ?? null,
-        support_info: input.support_info ?? null,
-        visual_url: input.visual_url ?? null,
-        folder: input.folder ?? null,
-        starts_at: input.starts_at ?? null,
-        ends_at: input.ends_at ?? null,
-      })
+      .insert(insertData)
       .select()
       .single()
 
@@ -224,21 +212,6 @@ export async function updateChallenge(id: string, input: ChallengeUpdate): Promi
     if (input.internal_name !== undefined) updateData.internal_name = input.internal_name
     if (input.public_title !== undefined) updateData.public_title = input.public_title
     if (input.show_public_title !== undefined) updateData.show_public_title = input.show_public_title
-    // Mode and features
-    if (input.mode !== undefined) updateData.mode = input.mode
-    if (input.features !== undefined) {
-      // Merge with existing features
-      const { data: current } = await supabase
-        .from('challenges')
-        .select('features')
-        .eq('id', id)
-        .single()
-      
-      updateData.features = {
-        ...(current?.features ?? {}),
-        ...input.features,
-      }
-    }
     // New JSON content format
     if (input.description_json !== undefined) updateData.description_json = input.description_json
     if (input.description_html !== undefined) updateData.description_html = input.description_html
@@ -251,6 +224,9 @@ export async function updateChallenge(id: string, input: ChallengeUpdate): Promi
     if (input.folder !== undefined) updateData.folder = input.folder
     if (input.starts_at !== undefined) updateData.starts_at = input.starts_at
     if (input.ends_at !== undefined) updateData.ends_at = input.ends_at
+    // Mode and features
+    if (input.mode !== undefined) updateData.mode = input.mode
+    if (input.features !== undefined) updateData.features = input.features
 
     const { data, error } = await supabase
       .from('challenges')

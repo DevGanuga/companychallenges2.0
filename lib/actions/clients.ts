@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import type { Client, ClientInsert, ClientUpdate, DEFAULT_CLIENT_FEATURES } from '@/lib/types/database'
 
 export type ClientActionResult =
@@ -17,6 +17,16 @@ export type ClientsListResult =
  */
 export async function getClients(): Promise<ClientsListResult> {
   try {
+    // Check configuration before making request
+    const config = isSupabaseConfigured()
+    if (!config.valid) {
+      console.error('[getClients] Missing Supabase config:', config.missing)
+      return { 
+        success: false, 
+        error: `Database not configured. Missing: ${config.missing.join(', ')}. Please check environment variables.` 
+      }
+    }
+
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -26,13 +36,18 @@ export async function getClients(): Promise<ClientsListResult> {
 
     if (error) {
       console.error('Error fetching clients:', error)
+      // Provide friendlier error messages
+      if (error.message.includes('Invalid API key')) {
+        return { success: false, error: 'Invalid API key. Please check your Supabase credentials in environment variables.' }
+      }
       return { success: false, error: error.message }
     }
 
     return { success: true, data: data as Client[] }
   } catch (err) {
     console.error('Unexpected error fetching clients:', err)
-    return { success: false, error: 'Failed to fetch clients' }
+    const message = err instanceof Error ? err.message : 'Failed to fetch clients'
+    return { success: false, error: message }
   }
 }
 

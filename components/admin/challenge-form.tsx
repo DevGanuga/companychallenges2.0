@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Button, Input, Spinner } from '@/components/ui'
-import { AdvancedEditor, EditorTrigger, type ContentType } from '@/components/ui/advanced-editor'
+import { InlineRichEditor } from '@/components/ui/inline-rich-editor'
 import { createChallenge, updateChallenge } from '@/lib/actions/challenges'
-import type { Challenge, Client, EditorContent, ChallengeFeatures } from '@/lib/types/database'
-import { DEFAULT_CHALLENGE_FEATURES } from '@/lib/types/database'
-import type { ContainerNode } from '@/components/ui/rich-editor'
+import type { Challenge, Client, EditorContent, ChallengeFeatures, DEFAULT_CHALLENGE_FEATURES } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 
 interface ChallengeFormProps {
@@ -16,6 +15,21 @@ interface ChallengeFormProps {
   open: boolean
   onClose: () => void
   onSuccess?: (challenge: Challenge) => void
+}
+
+// Default features for new challenges
+const defaultFeatures: ChallengeFeatures = {
+  announcements: true,
+  host_videos: true,
+  sprint_structure: true,
+  time_based_unlocks: true,
+  milestones: false,
+  reveal_moments: false,
+  micro_quizzes: false,
+  progress_tracking: false,
+  collective_progress: false,
+  session_persistence: false,
+  private_views: false,
 }
 
 // Brand color presets
@@ -32,125 +46,52 @@ const BRAND_COLOR_PRESETS = [
   '#ef4444', // Red
 ]
 
-const MODE_OPTIONS = [
-  { 
-    value: 'collective', 
-    label: 'Collective',
-    description: 'Shared viewing, no individual progress tracking'
-  },
-  { 
-    value: 'individual', 
-    label: 'Individual',
-    description: 'Personal progress tracking per participant'
-  },
-  { 
-    value: 'hybrid', 
-    label: 'Hybrid',
-    description: 'Shared content with individual progress'
-  },
-] as const
-
-// Group features by category
-const FEATURE_GROUPS = [
-  {
-    title: 'Content & Structure',
-    features: [
-      { key: 'sprint_structure', label: 'Sprints', description: 'Group assignments into phases' },
-      { key: 'announcements', label: 'Announcements', description: 'Post updates to participants' },
-      { key: 'time_based_unlocks', label: 'Scheduled Releases', description: 'Time-lock content' },
-    ] as const
-  },
-  {
-    title: 'Gamification',
-    features: [
-      { key: 'milestones', label: 'Milestones', description: 'Achievement markers', requiresIndividual: true },
-      { key: 'micro_quizzes', label: 'Micro Quizzes', description: 'Quick assessments' },
-    ] as const
-  },
-  {
-    title: 'Tracking',
-    features: [
-      { key: 'progress_tracking', label: 'Progress Tracking', description: 'Track completion', requiresIndividual: true },
-    ] as const
-  },
-]
-
 export function ChallengeForm({ challenge, clientId, clients, open, onClose, onSuccess }: ChallengeFormProps) {
   const isEditing = !!challenge
   const hasClientContext = !!clientId
   const resolvedClientId = clientId || challenge?.client_id || clients?.[0]?.id || ''
 
-  const [activeTab, setActiveTab] = useState<'basic' | 'features'>('basic')
   const [selectedClientId, setSelectedClientId] = useState(resolvedClientId)
   const [internalName, setInternalName] = useState(challenge?.internal_name ?? '')
   const [publicTitle, setPublicTitle] = useState(challenge?.public_title ?? '')
   const [showPublicTitle, setShowPublicTitle] = useState(challenge?.show_public_title ?? true)
   const [folder, setFolder] = useState(challenge?.folder ?? '')
-  const [brandColor, setBrandColor] = useState(challenge?.brand_color ?? '#3b82f6')
-  
-  // Mode and features
-  const [mode, setMode] = useState<'collective' | 'individual' | 'hybrid'>(challenge?.mode ?? 'collective')
-  const [features, setFeatures] = useState<ChallengeFeatures>(challenge?.features ?? DEFAULT_CHALLENGE_FEATURES)
-
-  // Rich content state (new JSON format)
-  const [descriptionJson, setDescriptionJson] = useState<ContainerNode | null>(
-    (challenge?.description_json as ContainerNode | null) ?? null
-  )
-  const [descriptionHtml, setDescriptionHtml] = useState<string>(
-    challenge?.description_html ?? ''
-  )
-
-  // Editor state
-  const [editorOpen, setEditorOpen] = useState(false)
+  const [brandColor, setBrandColor] = useState(challenge?.brand_color ?? '#ff6b4a')
+  const [descriptionHtml, setDescriptionHtml] = useState(challenge?.description_html ?? '')
+  const [supportInfo, setSupportInfo] = useState(challenge?.support_info ?? '')
+  const [features, setFeatures] = useState<ChallengeFeatures>(challenge?.features ?? defaultFeatures)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const isIndividualMode = mode === 'individual' || mode === 'hybrid'
 
   // Reset form state when modal opens
   useEffect(() => {
     if (open) {
       if (isEditing && challenge) {
-        // Editing: populate with existing values
         setSelectedClientId(challenge.client_id)
         setInternalName(challenge.internal_name ?? '')
         setPublicTitle(challenge.public_title ?? '')
         setShowPublicTitle(challenge.show_public_title ?? true)
-        setDescriptionJson((challenge.description_json as ContainerNode | null) ?? null)
         setDescriptionHtml(challenge.description_html ?? '')
         setFolder(challenge.folder ?? '')
-        setBrandColor(challenge.brand_color ?? '#3b82f6')
-        setMode(challenge.mode ?? 'collective')
-        setFeatures(challenge.features ?? DEFAULT_CHALLENGE_FEATURES)
+        setBrandColor(challenge.brand_color ?? '#ff6b4a')
+        setSupportInfo(challenge.support_info ?? '')
+        setFeatures(challenge.features ?? defaultFeatures)
         setError(null)
-        setActiveTab('basic')
       } else {
-        // Creating new: reset to defaults
         setSelectedClientId(resolvedClientId)
         setInternalName('')
         setPublicTitle('')
         setShowPublicTitle(true)
-        setDescriptionJson(null)
         setDescriptionHtml('')
         setFolder('')
-        setBrandColor('#3b82f6')
-        setMode('collective')
-        setFeatures(DEFAULT_CHALLENGE_FEATURES)
+        setBrandColor('#ff6b4a')
+        setSupportInfo('')
+        setFeatures(defaultFeatures)
         setError(null)
-        setActiveTab('basic')
       }
     }
   }, [open, isEditing, challenge, resolvedClientId])
-
-  const handleDescriptionChange = (json: ContainerNode, html: string) => {
-    setDescriptionJson(json)
-    setDescriptionHtml(html)
-  }
-
-  const handleFeatureToggle = (key: keyof ChallengeFeatures) => {
-    setFeatures(prev => ({ ...prev, [key]: !prev[key] }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -165,11 +106,10 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
             internal_name: internalName,
             public_title: publicTitle || null,
             show_public_title: showPublicTitle,
-            description_json: descriptionJson as EditorContent | null,
             description_html: descriptionHtml || null,
             folder: folder || null,
             brand_color: brandColor,
-            mode,
+            support_info: supportInfo || null,
             features,
           })
         : await createChallenge({
@@ -177,11 +117,10 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
             internal_name: internalName,
             public_title: publicTitle || null,
             show_public_title: showPublicTitle,
-            description_json: descriptionJson as EditorContent | null,
             description_html: descriptionHtml || null,
             folder: folder || null,
             brand_color: brandColor,
-            mode,
+            support_info: supportInfo || null,
             features,
           })
 
@@ -200,273 +139,231 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
 
   if (!open) return null
 
-  // Check if there's content in the description
-  const hasDescription = descriptionJson !== null && descriptionJson.children?.length > 0
+  const previewUrl = isEditing && challenge ? `/c/${challenge.slug}` : null
 
   return (
-    <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
-        />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-        <div className="relative w-full max-w-xl">
-          <div className="rounded-xl bg-[var(--color-bg-elevated)] shadow-xl border border-[var(--color-border)] max-h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)] flex-shrink-0">
-              <h2 className="text-lg font-semibold text-[var(--color-fg)]">
+      <div className="relative w-full max-w-2xl">
+        <div className="rounded-xl bg-white shadow-xl border border-gray-200 max-h-[90vh] flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
                 {isEditing ? 'Edit Challenge' : 'New Challenge'}
               </h2>
+              {isEditing && challenge && (
+                <p className="text-sm text-gray-500 mt-0.5">
+                  URL: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">/c/{challenge.slug}</code>
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {previewUrl && (
+                <Link
+                  href={previewUrl}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <PreviewIcon className="h-4 w-4" />
+                  Preview
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-[var(--color-bg-muted)] text-[var(--color-fg-muted)] transition-colors"
+                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
               >
                 <CloseIcon className="h-5 w-5" />
               </button>
             </div>
+          </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-[var(--color-border)] px-5 flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab('basic')}
-                className={cn(
-                  "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-                  activeTab === 'basic'
-                    ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-                    : "border-transparent text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"
-                )}
-              >
-                Basic Info
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('features')}
-                className={cn(
-                  "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-                  activeTab === 'features'
-                    ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-                    : "border-transparent text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"
-                )}
-              >
-                Mode & Features
-              </button>
-            </div>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              {error && (
+                <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-100">
+                  {error}
+                </div>
+              )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-5 space-y-4 overflow-y-auto flex-1">
-                {error && (
-                  <div className="rounded-lg bg-[var(--color-error-subtle)] px-4 py-3 text-sm text-[var(--color-error)]">
-                    {error}
-                  </div>
-                )}
-
-                {activeTab === 'basic' && (
-                  <>
-                    {/* Client Selection */}
-                    {!hasClientContext && !isEditing && clients && clients.length > 0 && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-[var(--color-fg)]">
-                          Client
-                        </label>
-                        <select
-                          value={selectedClientId}
-                          onChange={(e) => setSelectedClientId(e.target.value)}
-                          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-fg)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-                        >
-                          {clients.map((client) => (
-                            <option key={client.id} value={client.id}>
-                              {client.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <Input
-                      label="Internal Name"
-                      value={internalName}
-                      onChange={(e) => setInternalName(e.target.value)}
-                      placeholder="e.g. Q1 2026 Leadership Challenge"
-                      required
-                      autoFocus
-                    />
-
-                    <Input
-                      label="Public Title"
-                      value={publicTitle}
-                      onChange={(e) => setPublicTitle(e.target.value)}
-                      placeholder="e.g. Leadership Development Program"
-                    />
-
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={showPublicTitle}
-                        onChange={(e) => setShowPublicTitle(e.target.checked)}
-                        className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-accent)]"
-                      />
-                      <span className="text-sm text-[var(--color-fg)]">Show public title to participants</span>
-                    </label>
-
-                    {/* Challenge Page - Advanced Editor Trigger */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--color-fg)]">
-                        Challenge Page
-                      </label>
-                      <EditorTrigger
-                        label="page"
-                        hasContent={hasDescription}
-                        onClick={() => setEditorOpen(true)}
-                      />
-                      <p className="text-xs text-[var(--color-fg-subtle)]">
-                        Welcome message and overview for participants
-                      </p>
-                    </div>
-
-                    {/* Brand Color */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--color-fg)]">
-                        Brand Color
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <div className="flex gap-1.5">
-                          {BRAND_COLOR_PRESETS.map((color) => (
-                            <button
-                              key={color}
-                              type="button"
-                              onClick={() => setBrandColor(color)}
-                              className={cn(
-                                "w-7 h-7 rounded-lg transition-all",
-                                brandColor === color 
-                                  ? "ring-2 ring-offset-2 ring-gray-400 scale-110" 
-                                  : "hover:scale-105"
-                              )}
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </div>
-                        <input
-                          type="text"
-                          value={brandColor}
-                          onChange={(e) => setBrandColor(e.target.value)}
-                          placeholder="#3b82f6"
-                          className="w-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1.5 text-xs font-mono text-[var(--color-fg)]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Folder */}
-                    <Input
-                      label="Folder (optional)"
-                      value={folder}
-                      onChange={(e) => setFolder(e.target.value)}
-                      placeholder="e.g. 2026 Programs"
-                    />
-                  </>
-                )}
-
-                {activeTab === 'features' && (
-                  <>
-                    {/* Mode Selection */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium text-[var(--color-fg)]">
-                        Challenge Mode
-                      </label>
-                      <div className="grid gap-2">
-                        {MODE_OPTIONS.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setMode(option.value)}
-                            className={cn(
-                              "flex items-center gap-3 p-3 rounded-lg border text-left transition-all",
-                              mode === option.value
-                                ? "border-[var(--color-accent)] bg-[var(--color-accent)]/5"
-                                : "border-[var(--color-border)] hover:border-[var(--color-fg-muted)]"
-                            )}
-                          >
-                            <div className={cn(
-                              "w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0",
-                              mode === option.value
-                                ? "border-[var(--color-accent)] bg-[var(--color-accent)]"
-                                : "border-[var(--color-fg-muted)]"
-                            )}>
-                              {mode === option.value && (
-                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium text-[var(--color-fg)]">{option.label}</div>
-                              <div className="text-xs text-[var(--color-fg-muted)]">{option.description}</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Feature Toggles */}
-                    {FEATURE_GROUPS.map((group) => (
-                      <div key={group.title} className="space-y-2">
-                        <h3 className="text-sm font-medium text-[var(--color-fg)]">{group.title}</h3>
-                        <div className="space-y-1 rounded-lg border border-[var(--color-border)] overflow-hidden">
-                          {group.features.map((feature) => {
-                            const requiresIndividual = 'requiresIndividual' in feature && feature.requiresIndividual
-                            const isDisabled = requiresIndividual && !isIndividualMode
-                            
-                            return (
-                              <label
-                                key={feature.key}
-                                className={cn(
-                                  "flex items-center justify-between p-3 transition-colors",
-                                  !isDisabled && "hover:bg-[var(--color-bg-muted)] cursor-pointer",
-                                  isDisabled && "opacity-50"
-                                )}
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-sm text-[var(--color-fg)]">{feature.label}</div>
-                                  <div className="text-xs text-[var(--color-fg-muted)]">{feature.description}</div>
-                                </div>
-                                <button
-                                  type="button"
-                                  disabled={isDisabled}
-                                  onClick={() => !isDisabled && handleFeatureToggle(feature.key)}
-                                  className={cn(
-                                    "relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ml-3",
-                                    features[feature.key]
-                                      ? "bg-[var(--color-accent)]"
-                                      : "bg-[var(--color-bg-muted)]",
-                                    isDisabled && "cursor-not-allowed"
-                                  )}
-                                >
-                                  <span
-                                    className={cn(
-                                      "absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform",
-                                      features[feature.key] && "translate-x-5"
-                                    )}
-                                  />
-                                </button>
-                              </label>
-                            )
-                          })}
-                        </div>
-                        {group.features.some(f => 'requiresIndividual' in f && f.requiresIndividual) && !isIndividualMode && (
-                          <p className="text-xs text-amber-600 flex items-center gap-1">
-                            <InfoIcon className="h-3 w-3" />
-                            Some features require Individual or Hybrid mode
-                          </p>
-                        )}
-                      </div>
+              {/* Client Selection (only for new challenges without client context) */}
+              {!hasClientContext && !isEditing && clients && clients.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-900">Client</label>
+                  <select
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name}
+                      </option>
                     ))}
-                  </>
-                )}
+                  </select>
+                </div>
+              )}
+
+              {/* Internal Name */}
+              <Input
+                label="Internal Name"
+                value={internalName}
+                onChange={(e) => setInternalName(e.target.value)}
+                placeholder="e.g. Q1 2026 Leadership Challenge"
+                required
+                autoFocus
+              />
+
+              {/* Public Title */}
+              <div className="space-y-2">
+                <Input
+                  label="Public Title"
+                  value={publicTitle}
+                  onChange={(e) => setPublicTitle(e.target.value)}
+                  placeholder="e.g. Leadership Development Program"
+                />
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showPublicTitle}
+                    onChange={(e) => setShowPublicTitle(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                  />
+                  <span className="text-sm text-gray-600">Show public title to participants</span>
+                </label>
               </div>
 
-              {/* Footer */}
-              <div className="flex justify-end gap-3 px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-bg-subtle)] flex-shrink-0">
+              {/* Brand Color */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-900">Brand Color</label>
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    {BRAND_COLOR_PRESETS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setBrandColor(color)}
+                        className={cn(
+                          "w-7 h-7 rounded-lg transition-all",
+                          brandColor === color 
+                            ? "ring-2 ring-offset-2 ring-gray-400 scale-110" 
+                            : "hover:scale-105"
+                        )}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={brandColor}
+                    onChange={(e) => setBrandColor(e.target.value)}
+                    placeholder="#ff6b4a"
+                    className="w-24 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-mono text-gray-900"
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-900">
+                  Challenge Description
+                </label>
+                <InlineRichEditor
+                  value={descriptionHtml}
+                  onChange={setDescriptionHtml}
+                  placeholder="Welcome message and overview for participants..."
+                  hint="This appears on the challenge landing page"
+                  minHeight="150px"
+                />
+              </div>
+
+              {/* Support Info */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-900">
+                  Support Info <span className="font-normal text-gray-500">(optional)</span>
+                </label>
+                <InlineRichEditor
+                  value={supportInfo}
+                  onChange={setSupportInfo}
+                  placeholder="Contact info, help resources, tips..."
+                  hint="Shown when participants click the info button"
+                  minHeight="100px"
+                />
+              </div>
+
+              {/* Folder */}
+              <Input
+                label="Folder (optional)"
+                value={folder}
+                onChange={(e) => setFolder(e.target.value)}
+                placeholder="e.g. 2026 Programs"
+              />
+
+              {/* Features */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-900">
+                  Challenge Features
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <FeatureToggle
+                    label="Sprint Structure"
+                    description="Group assignments into phases"
+                    checked={features.sprint_structure}
+                    onChange={(v) => setFeatures({ ...features, sprint_structure: v })}
+                  />
+                  <FeatureToggle
+                    label="Milestones"
+                    description="Celebrate progress achievements"
+                    checked={features.milestones}
+                    onChange={(v) => setFeatures({ ...features, milestones: v })}
+                  />
+                  <FeatureToggle
+                    label="Time-based Unlocks"
+                    description="Schedule content releases"
+                    checked={features.time_based_unlocks}
+                    onChange={(v) => setFeatures({ ...features, time_based_unlocks: v })}
+                  />
+                  <FeatureToggle
+                    label="Progress Tracking"
+                    description="Track individual completion"
+                    checked={features.progress_tracking}
+                    onChange={(v) => setFeatures({ ...features, progress_tracking: v })}
+                  />
+                  <FeatureToggle
+                    label="Announcements"
+                    description="Post updates for participants"
+                    checked={features.announcements}
+                    onChange={(v) => setFeatures({ ...features, announcements: v })}
+                  />
+                  <FeatureToggle
+                    label="Micro Quizzes"
+                    description="Add reflection check-ins"
+                    checked={features.micro_quizzes}
+                    onChange={(v) => setFeatures({ ...features, micro_quizzes: v })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+              <div>
+                {isEditing && previewUrl && (
+                  <Link
+                    href={`/admin/challenges/${challenge.id}`}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Manage Assignments →
+                  </Link>
+                )}
+              </div>
+              <div className="flex gap-3">
                 <Button type="button" variant="secondary" onClick={onClose}>
                   Cancel
                 </Button>
@@ -481,21 +378,11 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
                   )}
                 </Button>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
-
-      {/* Advanced Editor Modal */}
-      <AdvancedEditor
-        open={editorOpen}
-        onClose={() => setEditorOpen(false)}
-        value={descriptionJson}
-        contentType="challenge-description"
-        onChange={handleDescriptionChange}
-        previewUrl={isEditing && challenge ? `/c/${challenge.slug}` : undefined}
-      />
-    </>
+    </div>
   )
 }
 
@@ -507,10 +394,53 @@ function CloseIcon({ className }: { className?: string }) {
   )
 }
 
-function InfoIcon({ className }: { className?: string }) {
+function PreviewIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
+  )
+}
+
+function FeatureToggle({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string
+  description: string
+  checked: boolean
+  onChange: (value: boolean) => void
+}) {
+  return (
+    <label className={cn(
+      "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+      checked 
+        ? "bg-blue-50 border-blue-200" 
+        : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+    )}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+      />
+      <div className="flex-1 min-w-0">
+        <div className={cn(
+          "text-sm font-medium",
+          checked ? "text-blue-900" : "text-gray-900"
+        )}>
+          {label}
+        </div>
+        <div className={cn(
+          "text-xs mt-0.5",
+          checked ? "text-blue-700" : "text-gray-500"
+        )}>
+          {description}
+        </div>
+      </div>
+    </label>
   )
 }

@@ -77,9 +77,18 @@ export function ChallengeList({ challenges, onEdit, onRefresh }: ChallengeListPr
     }
   }
 
-  const copyUrl = (slug: string) => {
-    const url = `${window.location.origin}/c/${slug}`
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const copyUrl = (challenge: ChallengeWithClient) => {
+    const url = `${window.location.origin}/c/${challenge.slug}`
     navigator.clipboard.writeText(url)
+    setCopiedId(challenge.id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const getPublicUrl = (slug: string) => {
+    if (typeof window === 'undefined') return `/c/${slug}`
+    return `${window.location.origin}/c/${slug}`
   }
 
   if (challenges.length === 0) {
@@ -102,10 +111,10 @@ export function ChallengeList({ challenges, onEdit, onRefresh }: ChallengeListPr
                 Challenge
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-fg-muted)]">
-                Client
+                URL
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-fg-muted)]">
-                Folder
+                Client
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-fg-muted)]">
                 Status
@@ -137,30 +146,52 @@ export function ChallengeList({ challenges, onEdit, onRefresh }: ChallengeListPr
                   </div>
                 </td>
                 <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs font-mono text-[var(--color-fg-muted)] bg-[var(--color-bg-muted)] px-2 py-1 rounded max-w-[200px] truncate">
+                      /c/{challenge.slug}
+                    </code>
+                    <button
+                      onClick={() => copyUrl(challenge)}
+                      className="p-1 rounded hover:bg-[var(--color-bg-muted)] text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)] transition-colors"
+                      title="Copy URL"
+                    >
+                      {copiedId === challenge.id ? (
+                        <CheckIcon className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <CopyIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                    <a
+                      href={getPublicUrl(challenge.slug)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 rounded hover:bg-[var(--color-bg-muted)] text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)] transition-colors"
+                      title="Open in new tab"
+                    >
+                      <ExternalLinkIcon className="h-4 w-4" />
+                    </a>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
                   <span className="text-sm text-[var(--color-fg-muted)]">
                     {challenge.client.name}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="text-sm text-[var(--color-fg-muted)]">
-                    {challenge.folder || '-'}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <Badge variant={challenge.is_archived ? 'outline' : 'success'}>
-                    {challenge.is_archived ? 'Archived' : 'Active'}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={challenge.is_archived ? 'outline' : 'success'}>
+                      {challenge.is_archived ? 'Archived' : 'Live'}
+                    </Badge>
+                    {!challenge.is_archived && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyUrl(challenge.slug)}
-                      title="Copy URL"
-                    >
-                      <LinkIcon className="h-4 w-4" />
-                    </Button>
                     <Link href={`/admin/challenges/${challenge.id}`}>
                       <Button variant="ghost" size="sm">
                         Manage
@@ -212,10 +243,26 @@ export function ChallengeList({ challenges, onEdit, onRefresh }: ChallengeListPr
   )
 }
 
-function LinkIcon({ className }: { className?: string }) {
+function CopyIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+    </svg>
+  )
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+    </svg>
+  )
+}
+
+function ExternalLinkIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
     </svg>
   )
 }

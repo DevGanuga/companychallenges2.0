@@ -353,6 +353,13 @@ export type AssignmentNavContext = {
     internalName: string
     brandColor?: string
     mode?: string
+    supportInfo?: string
+    contactInfo?: string
+    passwordInstructions?: string
+  }
+  client?: {
+    name: string
+    logoUrl?: string
   }
   assignmentUsageId?: string
   sprintId?: string
@@ -411,10 +418,17 @@ export async function getAssignmentWithContext(
       }
     }
 
-    // Get the challenge
+    // Get the challenge with client info
+    // Note: Some columns (contact_info, password_instructions) may not exist in older databases
     const { data: challenge, error: challengeError } = await supabase
       .from('challenges')
-      .select('id, client_id, slug, public_title, internal_name, brand_color')
+      .select(`
+        id, client_id, slug, public_title, internal_name, brand_color, support_info,
+        client:clients (
+          name,
+          logo_url
+        )
+      `)
       .eq('slug', challengeSlug)
       .eq('is_archived', false)
       .single()
@@ -531,8 +545,16 @@ export async function getAssignmentWithContext(
             publicTitle: challenge.public_title || undefined,
             internalName: challenge.internal_name,
             brandColor: challenge.brand_color || undefined,
-            mode: (challenge as any).mode || 'collective'
+            mode: (challenge as any).mode || 'collective',
+            supportInfo: challenge.support_info || undefined,
+            // These fields may not exist in older databases
+            contactInfo: (challenge as any).contact_info || undefined,
+            passwordInstructions: (challenge as any).password_instructions || undefined
           },
+          client: (challenge as any).client ? {
+            name: (challenge as any).client.name,
+            logoUrl: (challenge as any).client.logo_url || undefined
+          } : undefined,
           assignmentUsageId: currentUsage.id,
           sprintId: currentUsage.sprint_id || undefined,
           currentPosition: releasedIndex + 1,

@@ -81,7 +81,7 @@ export function ClientList({ clients, onEdit, onDelete }: ClientListProps) {
               <div className="min-w-0">
                 <p className="font-medium text-[var(--color-fg)] truncate">{client.name}</p>
                 <p className="text-xs text-[var(--color-fg-subtle)]">
-                  Created {new Date(client.created_at).toLocaleDateString()}
+                  Created {formatDate(client.created_at)}
                 </p>
               </div>
             </div>
@@ -122,4 +122,10 @@ function ChevronRightIcon({ className }: { className?: string }) {
       <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
     </svg>
   )
+}
+
+function formatDate(isoString: string): string {
+  const date = new Date(isoString)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
 }

@@ -69,6 +69,13 @@ export function ContentRenderer({
         'prose-table:w-full prose-table:border-collapse',
         'prose-th:bg-gray-50 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold prose-th:border prose-th:border-gray-200 prose-th:text-gray-900',
         'prose-td:px-4 prose-td:py-3 prose-td:border prose-td:border-gray-200 prose-td:text-gray-700',
+        // Embedded iframes (YouTube, Vimeo, etc.)
+        '[&_iframe]:w-full [&_iframe]:aspect-video [&_iframe]:rounded-xl [&_iframe]:shadow-lg [&_iframe]:my-6',
+        // Video elements
+        '[&_video]:w-full [&_video]:rounded-xl [&_video]:shadow-lg [&_video]:my-6',
+        // Embedded content wrapper (for responsive embeds)
+        '[&_.embed-container]:relative [&_.embed-container]:pb-[56.25%] [&_.embed-container]:h-0 [&_.embed-container]:overflow-hidden',
+        '[&_.embed-container_iframe]:absolute [&_.embed-container_iframe]:top-0 [&_.embed-container_iframe]:left-0 [&_.embed-container_iframe]:w-full [&_.embed-container_iframe]:h-full',
         className
       )}
       dangerouslySetInnerHTML={{ __html: htmlContent }}

@@ -84,6 +84,8 @@ export interface Challenge {
   brand_color: string | null // @deprecated - editor handles styling
   
   support_info: string | null // rich text
+  contact_info: string | null // contact information for participants
+  password_instructions: string | null // instructions for getting passwords
   visual_url: string | null
   is_archived: boolean
   folder: string | null // simple folder/project grouping
@@ -278,6 +280,52 @@ export interface Milestone {
   updated_at: string
 }
 
+/**
+ * ChallengeLabel - customizable UI labels per challenge for i18n
+ */
+export interface ChallengeLabel {
+  id: string
+  challenge_id: string
+  key: string // e.g., 'sprint', 'start', 'complete', 'available'
+  value: string // e.g., 'Missie', 'Begin', 'Klaar', 'beschikbaar'
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Default labels used when no custom label is defined
+ */
+export const DEFAULT_LABELS: Record<string, string> = {
+  // Navigation & Actions
+  start: 'Start',
+  complete: 'Complete',
+  done: 'Done',
+  back: 'Back',
+  next: 'Next',
+  previous: 'Previous',
+  
+  // Content Structure
+  sprint: 'Sprint',
+  day: 'Day',
+  assignment: 'Assignment',
+  assignments: 'Assignments',
+  
+  // Status
+  available: 'available',
+  coming_soon: 'Coming soon',
+  completed: 'Completed',
+  in_progress: 'In progress',
+  locked: 'Locked',
+  
+  // UI Elements
+  support: 'Support',
+  info: 'Info',
+  help: 'Need Help?',
+  
+  // Footer
+  powered_by: 'Powered by',
+}
+
 // =============================================================================
 // Individual Mode Entities
 // =============================================================================
@@ -454,6 +502,8 @@ export interface ChallengeInsert {
   brand_color?: string | null // @deprecated
   
   support_info?: string | null
+  contact_info?: string | null
+  password_instructions?: string | null
   visual_url?: string | null
   folder?: string | null
   starts_at?: string | null
@@ -479,6 +529,8 @@ export interface ChallengeUpdate {
   brand_color?: string | null // @deprecated
   
   support_info?: string | null
+  contact_info?: string | null
+  password_instructions?: string | null
   visual_url?: string | null
   is_archived?: boolean
   folder?: string | null
@@ -680,6 +732,17 @@ export interface MilestoneAchievementInsert {
   participant_id: string
   milestone_id: string
   achieved_at?: string
+}
+
+export interface ChallengeLabelInsert {
+  challenge_id: string
+  key: string
+  value: string
+}
+
+export interface ChallengeLabelUpdate {
+  key?: string
+  value?: string
 }
 
 // =============================================================================

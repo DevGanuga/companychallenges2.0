@@ -79,8 +79,8 @@ export function ChallengeDetailClient({
   const [announcements, setAnnouncements] = useState(initialAnnouncements)
   const [milestones, setMilestones] = useState(initialMilestones)
 
-  // Feature flags from challenge settings
-  const features = challenge.features ?? DEFAULT_CHALLENGE_FEATURES
+  // Feature flags from challenge settings (merge with defaults for missing keys)
+  const features = { ...DEFAULT_CHALLENGE_FEATURES, ...(challenge.features ?? {}) }
   const isIndividualMode = challenge.mode === 'individual' || challenge.mode === 'hybrid'
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [isAssignmentFormOpen, setIsAssignmentFormOpen] = useState(false)
@@ -525,6 +525,7 @@ export function ChallengeDetailClient({
                       index={index}
                       actionId={actionId}
                       showQuizButton={features.micro_quizzes}
+                      challengeSlug={challenge.slug}
                       onEdit={() => setEditingUsage(usage)}
                       onQuiz={() => setQuizEditorUsage(usage)}
                       onToggleVisibility={() => handleToggleVisibility(usage)}
@@ -632,6 +633,7 @@ interface SortableAssignmentRowProps {
   index: number
   actionId: string | null
   showQuizButton: boolean
+  challengeSlug: string
   onEdit: () => void
   onQuiz: () => void
   onToggleVisibility: () => void
@@ -643,6 +645,7 @@ function SortableAssignmentRow({
   index,
   actionId,
   showQuizButton,
+  challengeSlug,
   onEdit,
   onQuiz,
   onToggleVisibility,
@@ -733,6 +736,16 @@ function SortableAssignmentRow({
             <QuizIcon className="h-4 w-4" />
           </Button>
         )}
+        {/* Preview button - opens assignment in new tab */}
+        <a
+          href={`/a/${assignment.slug}?from=${challengeSlug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-fg-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-accent)]"
+          title="Preview assignment"
+        >
+          <ExternalLinkIcon className="h-4 w-4" />
+        </a>
         <Button
           variant="ghost"
           size="sm"

@@ -1,6 +1,6 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 
 export interface DashboardStats {
   totalClients: number
@@ -20,6 +20,18 @@ export interface RecentActivity {
  * Get dashboard statistics
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
+  // Check configuration first
+  const config = isSupabaseConfigured()
+  if (!config.valid) {
+    console.warn('[getDashboardStats] Supabase not configured:', config.missing)
+    return {
+      totalClients: 0,
+      activeChallenges: 0,
+      totalAssignments: 0,
+      thisMonthViews: 0,
+    }
+  }
+
   try {
     const supabase = createAdminClient()
 
@@ -57,6 +69,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
  * Get recent activity for the dashboard
  */
 export async function getRecentActivity(limit: number = 5): Promise<RecentActivity[]> {
+  // Check configuration first
+  const config = isSupabaseConfigured()
+  if (!config.valid) {
+    console.warn('[getRecentActivity] Supabase not configured:', config.missing)
+    return []
+  }
+
   try {
     const supabase = createAdminClient()
 
