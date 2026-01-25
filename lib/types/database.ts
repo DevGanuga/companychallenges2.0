@@ -140,6 +140,13 @@ export interface Sprint {
   position: number // order within challenge
   visual_url: string | null
   
+  // Sprint-as-container fields
+  slug: string | null // URL-friendly identifier
+  subtitle: string | null // Short teaser text
+  description_html: string | null // Rich HTML description for sprint page
+  cover_image_url: string | null // Cover image for sprint card
+  password_hash: string | null // Optional password protection
+  
   // Host content
   intro_video_url: string | null
   recap_video_url: string | null
@@ -172,7 +179,9 @@ export interface Assignment {
   visual_url: string | null
   media_url: string | null // embedded video URL
   password_hash: string | null // hashed shared access key
+  password_remember: boolean // if true, password unlocks for session; if false, always required
   tags: string[] // categorization tags for filtering
+  archived_at: string | null // when set, assignment is archived (soft deleted)
 
   // Content type
   content_type: 'standard' | 'quiz' | 'video' | 'announcement'
@@ -544,6 +553,13 @@ export interface SprintInsert {
   description?: string | null
   position?: number
   visual_url?: string | null
+  // Sprint-as-container fields
+  slug?: string | null
+  subtitle?: string | null
+  description_html?: string | null
+  cover_image_url?: string | null
+  password?: string // plain text, will be hashed
+  // Host content
   intro_video_url?: string | null
   recap_video_url?: string | null
   starts_at?: string | null
@@ -555,6 +571,13 @@ export interface SprintUpdate {
   description?: string | null
   position?: number
   visual_url?: string | null
+  // Sprint-as-container fields
+  slug?: string | null
+  subtitle?: string | null
+  description_html?: string | null
+  cover_image_url?: string | null
+  password?: string | null // plain text or null to remove
+  // Host content
   intro_video_url?: string | null
   recap_video_url?: string | null
   starts_at?: string | null
@@ -580,6 +603,7 @@ export interface AssignmentInsert {
   visual_url?: string | null
   media_url?: string | null
   password?: string // plain text, will be hashed
+  password_remember?: boolean // if true, password unlocks for session; if false, always required
   tags?: string[] // categorization tags
   content_type?: 'standard' | 'quiz' | 'video' | 'announcement'
   is_reusable?: boolean // defaults to true (saved for future reference)
@@ -604,6 +628,7 @@ export interface AssignmentUpdate {
   visual_url?: string | null
   media_url?: string | null
   password?: string | null // plain text or null to remove
+  password_remember?: boolean // if true, password unlocks for session; if false, always required
   tags?: string[]
   content_type?: 'standard' | 'quiz' | 'video' | 'announcement'
   is_reusable?: boolean

@@ -421,33 +421,21 @@ export function AssignmentPageClient({
                     </div>
                   )}
 
-                  {/* Video/Media - Button that opens modal */}
+                  {/* Video/Media - Compact inline button */}
                   {hasMedia && (
                     <button
                       onClick={() => setShowVideoModal(true)}
-                      className="group relative w-full rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 hover:shadow-xl transition-all duration-300"
+                      className="group inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
                     >
-                      <div className="aspect-video flex items-center justify-center">
-                        {/* Video Thumbnail or play button */}
-                        {isYouTubeUrl(assignment.media_url!) && getYouTubeThumbnail(assignment.media_url!) ? (
-                          <img 
-                            src={getYouTubeThumbnail(assignment.media_url!)!}
-                            alt="Video thumbnail"
-                            className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity"
-                          />
-                        ) : null}
-                        <div className="relative z-10 flex flex-col items-center gap-3">
-                          <div 
-                            className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
-                            style={{ backgroundColor: brandColor }}
-                          >
-                            <PlayIcon className="h-8 w-8 text-white ml-1" />
-                          </div>
-                          <span className="text-white font-semibold text-sm opacity-90">
-                            Watch Video
-                          </span>
-                        </div>
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"
+                        style={{ backgroundColor: brandColor }}
+                      >
+                        <PlayIcon className="h-6 w-6 text-white ml-0.5" />
                       </div>
+                      <span className="text-white font-semibold text-sm pr-2">
+                        Watch Video
+                      </span>
                     </button>
                   )}
 

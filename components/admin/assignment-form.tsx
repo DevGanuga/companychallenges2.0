@@ -38,10 +38,12 @@ export function AssignmentForm({
   const [internalTitle, setInternalTitle] = useState(assignment?.internal_title ?? '')
   const [publicTitle, setPublicTitle] = useState(assignment?.public_title ?? '')
   const [subtitle, setSubtitle] = useState(assignment?.subtitle ?? '')
+  const [customSlug, setCustomSlug] = useState(assignment?.slug ?? '')
   const [contentType, setContentType] = useState<'standard' | 'video' | 'quiz' | 'announcement'>(assignment?.content_type ?? 'standard')
   const [mediaUrl, setMediaUrl] = useState(assignment?.media_url ?? '')
   const [visualUrl, setVisualUrl] = useState(assignment?.visual_url ?? '')
   const [password, setPassword] = useState('')
+  const [passwordRemember, setPasswordRemember] = useState(assignment?.password_remember ?? false)
   const [removePassword, setRemovePassword] = useState(false)
   const [saveForFutureReference, setSaveForFutureReference] = useState(true)
   const [tags, setTags] = useState<string[]>(assignment?.tags ?? [])
@@ -63,12 +65,14 @@ export function AssignmentForm({
         setInternalTitle(assignment.internal_title ?? '')
         setPublicTitle(assignment.public_title ?? '')
         setSubtitle(assignment.subtitle ?? '')
+        setCustomSlug(assignment.slug ?? '')
         setContentType(assignment.content_type ?? 'standard')
         setInstructionsHtml(assignment.instructions_html ?? '')
         setContentHtml(assignment.content_html ?? '')
         setMediaUrl(assignment.media_url ?? '')
         setVisualUrl(assignment.visual_url ?? '')
         setPassword('')
+        setPasswordRemember(assignment.password_remember ?? false)
         setRemovePassword(false)
         setSaveForFutureReference(true)
         setTags(assignment.tags ?? [])
@@ -77,12 +81,14 @@ export function AssignmentForm({
         setInternalTitle('')
         setPublicTitle('')
         setSubtitle('')
+        setCustomSlug('')
         setContentType('standard')
         setInstructionsHtml('')
         setContentHtml('')
         setMediaUrl('')
         setVisualUrl('')
         setPassword('')
+        setPasswordRemember(false)
         setRemovePassword(false)
         setSaveForFutureReference(true)
         setTags([])
@@ -196,6 +202,7 @@ export function AssignmentForm({
           internal_title: internalTitle,
           public_title: publicTitle || null,
           subtitle: subtitle || null,
+          slug: customSlug || undefined,
           content_type: contentType,
           instructions_html: instructionsHtml || null,
           content_html: contentHtml || null,
@@ -203,6 +210,7 @@ export function AssignmentForm({
           visual_url: visualUrl || null,
           // If removePassword is checked, pass null to remove; otherwise pass new password or undefined to keep existing
           password: removePassword ? null : (password || undefined),
+          password_remember: passwordRemember,
           is_reusable: saveForFutureReference,
           tags,
         })
@@ -212,12 +220,14 @@ export function AssignmentForm({
             internal_title: internalTitle,
             public_title: publicTitle || null,
             subtitle: subtitle || null,
+            slug: customSlug || undefined,
             content_type: contentType,
             instructions_html: instructionsHtml || null,
             content_html: contentHtml || null,
             media_url: mediaUrl || null,
             visual_url: visualUrl || null,
             password: password || undefined,
+            password_remember: passwordRemember,
             is_reusable: saveForFutureReference,
             tags,
           },
@@ -229,12 +239,14 @@ export function AssignmentForm({
           internal_title: internalTitle,
           public_title: publicTitle || null,
           subtitle: subtitle || null,
+          slug: customSlug || undefined,
           content_type: contentType,
           instructions_html: instructionsHtml || null,
           content_html: contentHtml || null,
           media_url: mediaUrl || null,
           visual_url: visualUrl || null,
           password: password || undefined,
+          password_remember: passwordRemember,
           is_reusable: saveForFutureReference,
           tags,
         })
@@ -347,6 +359,26 @@ export function AssignmentForm({
                 />
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-gray-900">
+                    Custom URL <span className="font-normal text-gray-500">(optional)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 whitespace-nowrap">/a/</span>
+                    <input
+                      type="text"
+                      value={customSlug}
+                      onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="my-assignment"
+                      className="flex-1 h-10 px-3 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">Leave empty for auto-generated URL</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div />
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-gray-900">
                     Content Type
                   </label>
                   <select
@@ -455,7 +487,7 @@ export function AssignmentForm({
                   <input
                     ref={mediaInputRef}
                     type="file"
-                    accept="video/*"
+                    accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov"
                     onChange={handleMediaUpload}
                     className="text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                   />
@@ -488,6 +520,15 @@ export function AssignmentForm({
                 <p className="text-xs text-gray-500">
                   Password is visible because it's for gamification, not security. Case-insensitive.
                 </p>
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={passwordRemember}
+                    onChange={(e) => setPasswordRemember(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                  />
+                  Remember password for session (uncheck to always require)
+                </label>
                 {isEditing && hasPassword && (
                   <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
                     <input

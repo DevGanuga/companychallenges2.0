@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Button,
   Input,
@@ -13,7 +13,9 @@ import {
   DialogTitle,
   Spinner,
 } from '@/components/ui'
+import { InlineRichEditor } from '@/components/ui/inline-rich-editor'
 import { createSprint, updateSprint } from '@/lib/actions/sprints'
+import { uploadFile } from '@/lib/actions/upload'
 import type { Sprint, SprintInsert, SprintUpdate } from '@/lib/types/database'
 
 interface SprintFormProps {
@@ -28,19 +30,31 @@ export function SprintForm({ challengeId, sprint, open, onClose, onSuccess }: Sp
   const isEditing = !!sprint
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
+  const coverInputRef = useRef<HTMLInputElement>(null)
 
   const [name, setName] = useState(sprint?.name ?? '')
+  const [subtitle, setSubtitle] = useState(sprint?.subtitle ?? '')
   const [description, setDescription] = useState(sprint?.description ?? '')
+  const [descriptionHtml, setDescriptionHtml] = useState(sprint?.description_html ?? '')
+  const [coverImageUrl, setCoverImageUrl] = useState(sprint?.cover_image_url ?? '')
+  const [password, setPassword] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState(sprint?.intro_video_url ?? '')
   const [recapVideoUrl, setRecapVideoUrl] = useState(sprint?.recap_video_url ?? '')
   const [startsAt, setStartsAt] = useState(sprint?.starts_at?.slice(0, 16) ?? '')
   const [endsAt, setEndsAt] = useState(sprint?.ends_at?.slice(0, 16) ?? '')
 
+  const hasPassword = !!sprint?.password_hash
+
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setName(sprint?.name ?? '')
+      setSubtitle(sprint?.subtitle ?? '')
       setDescription(sprint?.description ?? '')
+      setDescriptionHtml(sprint?.description_html ?? '')
+      setCoverImageUrl(sprint?.cover_image_url ?? '')
+      setPassword('')
       setIntroVideoUrl(sprint?.intro_video_url ?? '')
       setRecapVideoUrl(sprint?.recap_video_url ?? '')
       setStartsAt(sprint?.starts_at?.slice(0, 16) ?? '')
@@ -48,6 +62,30 @@ export function SprintForm({ challengeId, sprint, open, onClose, onSuccess }: Sp
       setError(null)
     }
   }, [open, sprint])
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingCover(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const result = await uploadFile(formData, 'challenges')
+      if (result.success) {
+        setCoverImageUrl(result.url)
+      } else {
+        setError(result.error || 'Failed to upload cover image')
+      }
+    } catch {
+      setError('Failed to upload cover image')
+    } finally {
+      setIsUploadingCover(false)
+      if (coverInputRef.current) coverInputRef.current.value = ''
+    }
+  }
 
   const handleClose = () => {
     setError(null)
@@ -63,7 +101,11 @@ export function SprintForm({ challengeId, sprint, open, onClose, onSuccess }: Sp
       if (isEditing && sprint) {
         const update: SprintUpdate = {
           name: name.trim(),
+          subtitle: subtitle.trim() || null,
           description: description.trim() || null,
+          description_html: descriptionHtml.trim() || null,
+          cover_image_url: coverImageUrl.trim() || null,
+          password: password.trim() || undefined,
           intro_video_url: introVideoUrl.trim() || null,
           recap_video_url: recapVideoUrl.trim() || null,
           starts_at: startsAt ? new Date(startsAt).toISOString() : null,
@@ -82,7 +124,11 @@ export function SprintForm({ challengeId, sprint, open, onClose, onSuccess }: Sp
         const input: SprintInsert = {
           challenge_id: challengeId,
           name: name.trim(),
+          subtitle: subtitle.trim() || null,
           description: description.trim() || null,
+          description_html: descriptionHtml.trim() || null,
+          cover_image_url: coverImageUrl.trim() || null,
+          password: password.trim() || undefined,
           intro_video_url: introVideoUrl.trim() || null,
           recap_video_url: recapVideoUrl.trim() || null,
           starts_at: startsAt ? new Date(startsAt).toISOString() : null,
@@ -124,30 +170,114 @@ export function SprintForm({ challengeId, sprint, open, onClose, onSuccess }: Sp
             </div>
           )}
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
+                Sprint Name <span className="text-[var(--color-error)]">*</span>
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Week 1: Getting Started"
+                required
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
+                Subtitle
+              </label>
+              <Input
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="Short teaser text"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          {/* Cover Image */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
-              Sprint Name <span className="text-[var(--color-error)]">*</span>
+              Cover Image
             </label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Week 1: Getting Started"
-              required
-              disabled={loading}
+            <div className="flex items-center gap-3">
+              {coverImageUrl && (
+                <img src={coverImageUrl} alt="Cover" className="h-16 w-24 object-cover rounded" />
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => coverInputRef.current?.click()}
+                disabled={loading || isUploadingCover}
+              >
+                {isUploadingCover ? <Spinner size="sm" /> : coverImageUrl ? 'Change' : 'Upload'}
+              </Button>
+              {coverImageUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCoverImageUrl('')}
+                  disabled={loading}
+                >
+                  Remove
+                </Button>
+              )}
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleCoverUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
+
+          {/* Rich Description */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
+              Sprint Description (Rich Text)
+            </label>
+            <InlineRichEditor
+              value={descriptionHtml}
+              onChange={setDescriptionHtml}
+              placeholder="Rich description shown on sprint detail page..."
+              minHeight="100px"
             />
           </div>
 
+          {/* Simple Description */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
-              Description
+              Simple Description
             </label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of what this sprint covers..."
-              rows={3}
+              placeholder="Brief plain-text description..."
+              rows={2}
               disabled={loading}
             />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
+              Password Protection
+            </label>
+            <Input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={hasPassword ? 'Enter new password to change' : 'Optional password'}
+              disabled={loading}
+              autoComplete="off"
+            />
+            <p className="mt-1 text-xs text-[var(--color-fg-subtle)]">
+              Participants must enter this password to access the sprint
+            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -242,3 +372,4 @@ function SaveIcon({ className }: { className?: string }) {
     </svg>
   )
 }
+

@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import type { EditorContent } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 import { FloatingInfoButton, InfoButtonConfig } from '@/components/ui/rich-editor/info-button'
@@ -26,6 +28,32 @@ export function ContentRenderer({
   variant = 'default',
 }: ContentRendererProps) {
   const htmlContent = html || legacyHtml
+  const containerRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+
+  // Handle internal link clicks to open in same window
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const link = target.closest('a')
+      if (!link) return
+
+      const href = link.getAttribute('href')
+      if (!href) return
+
+      // Check if it's an internal link
+      if (href.startsWith('/a/') || href.startsWith('/c/')) {
+        e.preventDefault()
+        router.push(href)
+      }
+    }
+
+    container.addEventListener('click', handleClick)
+    return () => container.removeEventListener('click', handleClick)
+  }, [router])
 
   if (!htmlContent) {
     return null
@@ -33,6 +61,7 @@ export function ContentRenderer({
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         'prose max-w-none',
         // Base text color

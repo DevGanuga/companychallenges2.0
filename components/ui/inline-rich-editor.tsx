@@ -13,6 +13,7 @@ import { FontFamily } from '@tiptap/extension-font-family'
 import { Highlight } from '@tiptap/extension-highlight'
 import { Underline } from '@tiptap/extension-underline'
 import { cn } from '@/lib/utils/cn'
+import { LinkPicker } from './link-picker'
 
 // Custom FontSize extension - TipTap doesn't have one built in
 const FontSize = Extension.create({
@@ -155,6 +156,9 @@ export function InlineRichEditor({
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [customColor, setCustomColor] = useState('#000000')
   const [showImageMenu, setShowImageMenu] = useState(false)
+  const [showLinkPicker, setShowLinkPicker] = useState(false)
+  const [showHtmlSource, setShowHtmlSource] = useState(false)
+  const [htmlSource, setHtmlSource] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const colorPickerRef = useRef<HTMLDivElement>(null)
   const imageMenuRef = useRef<HTMLDivElement>(null)
@@ -240,7 +244,7 @@ export function InlineRichEditor({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const setLink = useCallback(() => {
+  const setLinkManual = useCallback(() => {
     if (!editor) return
     const previousUrl = editor.getAttributes('link').href || ''
     const url = window.prompt(
@@ -253,6 +257,24 @@ export function InlineRichEditor({
       return
     }
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+  }, [editor])
+
+  const insertLinkFromPicker = useCallback((url: string, text: string) => {
+    if (!editor) return
+    
+    // Check if there's selected text
+    const { from, to } = editor.state.selection
+    const hasSelection = from !== to
+    
+    if (hasSelection) {
+      // Apply link to selected text
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    } else {
+      // Insert new text with link
+      editor.chain().focus()
+        .insertContent(`<a href="${url}">${text}</a>`)
+        .run()
+    }
   }, [editor])
 
   const addImageFromUrl = useCallback(() => {
@@ -542,14 +564,24 @@ export function InlineRichEditor({
 
           <ToolbarDivider />
 
-          {/* Insert */}
-          <ToolbarButton
-            onClick={setLink}
-            active={editor?.isActive('link')}
-            title="Insert Link"
+          {/* Insert Link */}
+          <div className="relative">
+            <ToolbarButton
+              onClick={() => setShowLinkPicker(true)}
+              active={editor?.isActive('link')}
+              title="Insert Link (search)"
+            >
+              <LinkIcon className="h-4 w-4" />
+            </ToolbarButton>
+          </div>
+          <button
+            type="button"
+            onClick={setLinkManual}
+            title="Insert Link (manual URL)"
+            className="flex h-7 min-w-7 items-center justify-center rounded px-1 text-xs font-mono text-gray-500 hover:bg-gray-100"
           >
-            <LinkIcon className="h-4 w-4" />
-          </ToolbarButton>
+            URL
+          </button>
           {/* Image Insert */}
           <div className="relative" ref={imageMenuRef}>
             <ToolbarButton
@@ -617,15 +649,73 @@ export function InlineRichEditor({
           >
             <ClearFormatIcon className="h-4 w-4" />
           </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* HTML Source Toggle */}
+          <ToolbarButton
+            onClick={() => {
+              if (!showHtmlSource && editor) {
+                setHtmlSource(editor.getHTML())
+              }
+              setShowHtmlSource(!showHtmlSource)
+            }}
+            active={showHtmlSource}
+            title="View/Edit HTML Source"
+          >
+            <CodeIcon className="h-4 w-4" />
+          </ToolbarButton>
         </div>
 
-        {/* Editor Content */}
-        <EditorContent editor={editor} />
+        {/* HTML Source Editor */}
+        {showHtmlSource ? (
+          <div className="border-t border-gray-200">
+            <textarea
+              value={htmlSource}
+              onChange={(e) => setHtmlSource(e.target.value)}
+              className="w-full p-3 font-mono text-sm bg-gray-50 focus:outline-none min-h-[150px] resize-y"
+              placeholder="<p>Edit HTML source...</p>"
+              style={{ minHeight }}
+            />
+            <div className="flex justify-end gap-2 p-2 bg-gray-100 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => setShowHtmlSource(false)}
+                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (editor) {
+                    editor.commands.setContent(htmlSource)
+                    onChange?.(htmlSource)
+                  }
+                  setShowHtmlSource(false)
+                }}
+                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Apply Changes
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Editor Content */
+          <EditorContent editor={editor} />
+        )}
       </div>
 
       {hint && (
         <p className="text-xs text-gray-500">{hint}</p>
       )}
+
+      {/* Link Picker Modal */}
+      <LinkPicker
+        open={showLinkPicker}
+        onClose={() => setShowLinkPicker(false)}
+        onSelect={insertLinkFromPicker}
+      />
     </div>
   )
 }
@@ -783,6 +873,14 @@ function ClearFormatIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
+    </svg>
+  )
+}
+
+function CodeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
     </svg>
   )
 }

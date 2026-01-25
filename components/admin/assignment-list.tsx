@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button, Badge, Spinner, Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui'
-import { duplicateAssignment, deleteAssignment } from '@/lib/actions/assignments'
+import { duplicateAssignment, deleteAssignment, archiveAssignment, unarchiveAssignment } from '@/lib/actions/assignments'
 import { UsedInDialog } from './used-in-dialog'
 import { VariantEditor } from './variant-editor'
 import type { AssignmentWithUsages } from '@/lib/types/database'
@@ -100,6 +100,42 @@ export function AssignmentList({ assignments, onEdit, onRefresh, onTagClick }: A
   const copyUrl = (slug: string) => {
     const url = `${window.location.origin}/a/${slug}`
     navigator.clipboard.writeText(url)
+  }
+
+  const handleArchive = async (assignment: AssignmentWithUsages) => {
+    setActionId(assignment.id)
+    setError(null)
+
+    try {
+      const result = await archiveAssignment(assignment.id)
+      if (result.success) {
+        onRefresh()
+      } else {
+        setError(result.error ?? 'Failed to archive assignment')
+      }
+    } catch {
+      setError('Failed to archive assignment')
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  const handleUnarchive = async (assignment: AssignmentWithUsages) => {
+    setActionId(assignment.id)
+    setError(null)
+
+    try {
+      const result = await unarchiveAssignment(assignment.id)
+      if (result.success) {
+        onRefresh()
+      } else {
+        setError(result.error ?? 'Failed to restore assignment')
+      }
+    } catch {
+      setError('Failed to restore assignment')
+    } finally {
+      setActionId(null)
+    }
   }
 
   if (assignments.length === 0) {
@@ -241,13 +277,36 @@ export function AssignmentList({ assignments, onEdit, onRefresh, onTagClick }: A
                       >
                         {actionId === assignment.id ? <Spinner size="sm" /> : 'Duplicate'}
                       </Button>
+                      {assignment.archived_at ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUnarchive(assignment)}
+                          disabled={actionId === assignment.id}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          title="Restore from archive"
+                        >
+                          Restore
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleArchive(assignment)}
+                          disabled={actionId === assignment.id}
+                          className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                          title="Archive assignment"
+                        >
+                          Archive
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteClick(assignment)}
                         disabled={actionId === assignment.id || usageCount > 0}
                         className={usageCount === 0 ? 'text-[var(--color-error)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-subtle)]' : ''}
-                        title={usageCount > 0 ? 'Remove from all challenges first' : 'Delete assignment'}
+                        title={usageCount > 0 ? 'Remove from all challenges first' : 'Delete permanently'}
                       >
                         Delete
                       </Button>

@@ -62,10 +62,10 @@ export async function verifyAssignmentPassword(
 
     const supabase = createAdminClient()
 
-    // Get the password hash
+    // Get the password hash and remember setting
     const { data: assignment, error: fetchError } = await supabase
       .from('assignments')
-      .select('password_hash')
+      .select('password_hash, password_remember')
       .eq('id', assignmentId)
       .single()
 
@@ -106,15 +106,18 @@ export async function verifyAssignmentPassword(
       }
     }
 
-    // Set a cookie to remember the password verification for this assignment
-    const cookieStore = await cookies()
-    cookieStore.set(`assignment_access_${assignmentId}`, 'verified', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/'
-    })
+    // Only set cookie if password_remember is enabled
+    // If not, password will be required on every visit
+    if (assignment.password_remember) {
+      const cookieStore = await cookies()
+      cookieStore.set(`assignment_access_${assignmentId}`, 'verified', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        // Session cookie - expires when browser closes
+        path: '/'
+      })
+    }
 
     return { success: true }
   } catch (err) {

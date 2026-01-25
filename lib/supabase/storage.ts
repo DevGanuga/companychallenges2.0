@@ -20,10 +20,31 @@ export async function uploadMedia(
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
+    // Determine content type - use file.type if available, otherwise infer from extension
+    let contentType = file.type
+    if (!contentType || contentType === 'application/octet-stream') {
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      const mimeTypes: Record<string, string> = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'svg': 'image/svg+xml',
+        'heic': 'image/heic',
+        'heif': 'image/heif',
+        'mp4': 'video/mp4',
+        'webm': 'video/webm',
+        'ogg': 'video/ogg',
+        'mov': 'video/quicktime',
+      }
+      contentType = (ext && mimeTypes[ext]) || 'application/octet-stream'
+    }
+
     const { data, error } = await supabase.storage
       .from('media')
       .upload(filename, buffer, {
-        contentType: file.type,
+        contentType,
         upsert: false,
       })
 

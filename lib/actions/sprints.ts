@@ -83,6 +83,38 @@ async function getNextSprintPosition(challengeId: string): Promise<number> {
 }
 
 /**
+ * Hash a password for sprint protection
+ */
+async function hashSprintPassword(password: string, supabase: ReturnType<typeof createAdminClient>): Promise<string | null> {
+  if (!password) return null
+  
+  const normalizedPassword = password.toLowerCase().trim()
+  
+  try {
+    const { data, error } = await supabase.rpc('hash_password', { password: normalizedPassword })
+    if (error) {
+      console.warn('hash_password RPC not available, using fallback:', error.message)
+      return `fallback:${btoa(normalizedPassword)}`
+    }
+    return data || null
+  } catch {
+    return `fallback:${btoa(normalizedPassword)}`
+  }
+}
+
+/**
+ * Generate unique slug for sprint
+ */
+function generateSprintSlug(): string {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789'
+  let result = ''
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
+/**
  * Create a new sprint
  */
 export async function createSprint(input: SprintInsert): Promise<SprintActionResult> {
@@ -98,6 +130,12 @@ export async function createSprint(input: SprintInsert): Promise<SprintActionRes
   try {
     // Get next position if not provided
     const position = input.position ?? await getNextSprintPosition(input.challenge_id)
+    
+    // Generate slug
+    const slug = input.slug || generateSprintSlug()
+    
+    // Hash password if provided
+    const passwordHash = input.password ? await hashSprintPassword(input.password, supabase) : null
 
     const { data, error } = await supabase
       .from('sprints')
@@ -107,6 +145,13 @@ export async function createSprint(input: SprintInsert): Promise<SprintActionRes
         description: input.description ?? null,
         position,
         visual_url: input.visual_url ?? null,
+        // New sprint-as-container fields
+        slug,
+        subtitle: input.subtitle ?? null,
+        description_html: input.description_html ?? null,
+        cover_image_url: input.cover_image_url ?? null,
+        password_hash: passwordHash,
+        // Host content
         intro_video_url: input.intro_video_url ?? null,
         recap_video_url: input.recap_video_url ?? null,
         starts_at: input.starts_at ?? null,
@@ -141,10 +186,25 @@ export async function updateSprint(id: string, input: SprintUpdate): Promise<Spr
     if (input.description !== undefined) updateData.description = input.description
     if (input.position !== undefined) updateData.position = input.position
     if (input.visual_url !== undefined) updateData.visual_url = input.visual_url
+    // New sprint-as-container fields
+    if (input.slug !== undefined) updateData.slug = input.slug
+    if (input.subtitle !== undefined) updateData.subtitle = input.subtitle
+    if (input.description_html !== undefined) updateData.description_html = input.description_html
+    if (input.cover_image_url !== undefined) updateData.cover_image_url = input.cover_image_url
+    // Host content
     if (input.intro_video_url !== undefined) updateData.intro_video_url = input.intro_video_url
     if (input.recap_video_url !== undefined) updateData.recap_video_url = input.recap_video_url
     if (input.starts_at !== undefined) updateData.starts_at = input.starts_at
     if (input.ends_at !== undefined) updateData.ends_at = input.ends_at
+    
+    // Handle password update
+    if (input.password !== undefined) {
+      if (input.password === null || input.password === '') {
+        updateData.password_hash = null
+      } else {
+        updateData.password_hash = await hashSprintPassword(input.password, supabase)
+      }
+    }
 
     const { data, error } = await supabase
       .from('sprints')

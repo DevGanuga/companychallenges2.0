@@ -93,18 +93,14 @@ export function PasswordGate({ assignmentId, assignmentTitle, onSuccess, passwor
             <LockIcon className="h-10 w-10 text-[var(--color-accent)]" />
           </div>
 
-          {/* Title */}
-          <h1 className="mb-2 text-center text-2xl font-bold text-[var(--color-fg)]">
-            Password Required
+          {/* Title - Simplified */}
+          <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-fg)]">
+            Password
           </h1>
-          <p className="mb-8 text-center text-[var(--color-fg-muted)]">
-            Enter the password to unlock{' '}
-            <span className="font-semibold text-[var(--color-fg)]">{assignmentTitle}</span>
-          </p>
 
-          {/* Password Instructions */}
+          {/* Password Instructions - Only show if provided */}
           {passwordInstructions && (
-            <div className="rounded-xl bg-[var(--color-accent-subtle)] px-4 py-3 text-sm text-[var(--color-accent)]">
+            <div className="mb-6 rounded-xl bg-[var(--color-accent-subtle)] px-4 py-3 text-sm text-[var(--color-accent)]">
               <div className="flex items-start gap-2">
                 <HintIcon className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{passwordInstructions}</span>
@@ -124,7 +120,7 @@ export function PasswordGate({ assignmentId, assignmentTitle, onSuccess, passwor
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
+                  placeholder="Password"
                   disabled={isPending || !!retryAfter}
                   className={cn(
                     'w-full rounded-2xl border-[1.5px] bg-[var(--color-bg)] px-5 py-4 pr-20 text-[var(--color-fg)] placeholder-[var(--color-fg-subtle)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2',
@@ -173,33 +169,28 @@ export function PasswordGate({ assignmentId, assignmentTitle, onSuccess, passwor
               </div>
             )}
 
-            {/* Submit Button */}
+            {/* Submit Button - Icon only */}
             <button
               type="submit"
               disabled={isPending || !!retryAfter || !password.trim()}
               className="w-full rounded-2xl bg-[var(--color-accent)] px-5 py-4 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-400 disabled:hover:translate-y-0 disabled:hover:brightness-100"
             >
               {isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <LoaderIcon className="h-5 w-5 animate-spin" />
-                  Verifying...
+                <span className="flex items-center justify-center">
+                  <LoaderIcon className="h-6 w-6 animate-spin" />
                 </span>
               ) : retryAfter ? (
-                `Try again in ${retryAfter}s`
-              ) : (
                 <span className="flex items-center justify-center gap-2">
-                  <UnlockIcon className="h-5 w-5" />
-                  Unlock Content
+                  <ClockIcon className="h-5 w-5" />
+                  {retryAfter}s
+                </span>
+              ) : (
+                <span className="flex items-center justify-center">
+                  <UnlockIcon className="h-6 w-6" />
                 </span>
               )}
             </button>
           </form>
-
-          {/* Help Text */}
-          <p className="mt-8 text-center text-sm text-[var(--color-fg-subtle)]">
-            Don't have the password?{' '}
-            <span className="text-[var(--color-fg-muted)]">Contact your administrator.</span>
-          </p>
         </div>
       </div>
     </div>

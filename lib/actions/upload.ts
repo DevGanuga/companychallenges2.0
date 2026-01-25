@@ -38,12 +38,20 @@ export async function uploadFile(
     const allowedVideoTypes = [
       'video/mp4',
       'video/webm',
+      'video/ogg',
+      'video/quicktime', // MOV files
     ]
     const allowedTypes = [...allowedImageTypes, ...allowedVideoTypes]
 
-    if (!allowedTypes.includes(file.type)) {
+    // Some browsers report different MIME types for the same file
+    // Also check by file extension as fallback
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'heic', 'heif', 'mp4', 'webm', 'ogg', 'mov']
+    const isValidByExtension = ext && validExtensions.includes(ext)
+
+    if (!allowedTypes.includes(file.type) && !isValidByExtension) {
       // Provide a user-friendly error message
-      const friendlyTypes = 'JPG, PNG, GIF, WebP, SVG, HEIC, MP4, WebM'
+      const friendlyTypes = 'JPG, PNG, GIF, WebP, SVG, HEIC, MP4, WebM, OGG, MOV'
       return {
         success: false,
         error: `Unsupported file format. Please use: ${friendlyTypes}`,

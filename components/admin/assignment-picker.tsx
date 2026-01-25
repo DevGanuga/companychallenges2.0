@@ -58,7 +58,7 @@ export function AssignmentPicker({
   const [step, setStep] = useState<Step>('select')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [versionLabel, setVersionLabel] = useState('Version')
+  const [versionLabel, setVersionLabel] = useState('')
   const [isCreatingVersion, setIsCreatingVersion] = useState(false)
 
   const selectedAssignment = useMemo(() =>
@@ -319,17 +319,16 @@ export function AssignmentPicker({
                     <label className="text-xs font-semibold text-[var(--color-fg-muted)] block mb-1">
                       Version Label
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={versionLabel}
                       onChange={(e) => setVersionLabel(e.target.value)}
-                      className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
-                    >
-                      {VERSION_LABELS.map((label) => (
-                        <option key={label} value={label}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="e.g. Client A, Dutch version, Easy mode..."
+                      className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    />
+                    <p className="mt-1 text-xs text-[var(--color-fg-subtle)]">
+                      Name this version to differentiate it (e.g., "Dutch", "Client A", "Simplified")
+                    </p>
                   </div>
 
                   <Button

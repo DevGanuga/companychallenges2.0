@@ -262,6 +262,7 @@ export async function createAssignment(input: AssignmentInsert): Promise<Assignm
         visual_url: input.visual_url ?? null,
         media_url: input.media_url ?? null,
         password_hash: passwordHash,
+        password_remember: input.password_remember ?? false,
         content_type: input.content_type ?? 'standard',
         is_reusable: input.is_reusable ?? true,
         tags: input.tags ?? [],
@@ -316,6 +317,7 @@ export async function createAssignmentForChallenge(
         visual_url: input.visual_url ?? null,
         media_url: input.media_url ?? null,
         password_hash: passwordHash,
+        password_remember: input.password_remember ?? false,
         content_type: input.content_type ?? 'standard',
         is_reusable: input.is_reusable ?? true,
         tags: input.tags ?? [],
@@ -392,6 +394,7 @@ export async function updateAssignment(id: string, input: AssignmentUpdate): Pro
     if (input.content_type !== undefined) updateData.content_type = input.content_type
     if (input.is_reusable !== undefined) updateData.is_reusable = input.is_reusable
     if (input.tags !== undefined) updateData.tags = input.tags
+    if (input.password_remember !== undefined) updateData.password_remember = input.password_remember
 
     // Handle password update
     if (input.password !== undefined) {
@@ -655,6 +658,56 @@ export async function getAssignmentUsageCount(id: string): Promise<number> {
   } catch (err) {
     console.error('Unexpected error getting usage count:', err)
     return 0
+  }
+}
+
+/**
+ * Archive an assignment (soft delete)
+ */
+export async function archiveAssignment(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+      .from('assignments')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error archiving assignment:', error)
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/admin/assignments')
+    return { success: true }
+  } catch (err) {
+    console.error('Unexpected error archiving assignment:', err)
+    return { success: false, error: 'Failed to archive assignment' }
+  }
+}
+
+/**
+ * Unarchive an assignment
+ */
+export async function unarchiveAssignment(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+      .from('assignments')
+      .update({ archived_at: null })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error unarchiving assignment:', error)
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/admin/assignments')
+    return { success: true }
+  } catch (err) {
+    console.error('Unexpected error unarchiving assignment:', err)
+    return { success: false, error: 'Failed to unarchive assignment' }
   }
 }
 

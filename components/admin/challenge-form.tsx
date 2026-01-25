@@ -57,6 +57,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
   const [publicTitle, setPublicTitle] = useState(challenge?.public_title ?? '')
   const [showPublicTitle, setShowPublicTitle] = useState(challenge?.show_public_title ?? true)
   const [folder, setFolder] = useState(challenge?.folder ?? '')
+  const [customSlug, setCustomSlug] = useState(challenge?.slug ?? '')
   const [brandColor, setBrandColor] = useState(challenge?.brand_color ?? '#ff6b4a')
   const [descriptionHtml, setDescriptionHtml] = useState(challenge?.description_html ?? '')
   const [supportInfo, setSupportInfo] = useState(challenge?.support_info ?? '')
@@ -77,6 +78,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
         setShowPublicTitle(challenge.show_public_title ?? true)
         setDescriptionHtml(challenge.description_html ?? '')
         setFolder(challenge.folder ?? '')
+        setCustomSlug(challenge.slug ?? '')
         setBrandColor(challenge.brand_color ?? '#ff6b4a')
         setSupportInfo(challenge.support_info ?? '')
         setPasswordInstructions(challenge.password_instructions ?? '')
@@ -90,6 +92,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
         setShowPublicTitle(true)
         setDescriptionHtml('')
         setFolder('')
+        setCustomSlug('')
         setBrandColor('#ff6b4a')
         setSupportInfo('')
         setPasswordInstructions('')
@@ -141,6 +144,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
             show_public_title: showPublicTitle,
             description_html: descriptionHtml || null,
             folder: folder || null,
+            slug: customSlug || undefined,
             brand_color: brandColor,
             support_info: supportInfo || null,
             password_instructions: showPasswordInstructions ? passwordInstructions : null,
@@ -153,6 +157,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
             show_public_title: showPublicTitle,
             description_html: descriptionHtml || null,
             folder: folder || null,
+            slug: customSlug || undefined,
             brand_color: brandColor,
             support_info: supportInfo || null,
             password_instructions: showPasswordInstructions ? passwordInstructions : null,
@@ -219,8 +224,8 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-            <div className="p-6 space-y-5 overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+            <div className="p-6 space-y-5 overflow-y-auto flex-1 overflow-x-visible">
               {error && (
                 <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-100">
                   {error}
@@ -275,6 +280,25 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
                 </label>
               </div>
 
+              {/* Custom URL */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-900">
+                  Custom URL <span className="font-normal text-gray-500">(optional)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 whitespace-nowrap">/c/</span>
+                  <Input
+                    value={customSlug}
+                    onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder="my-challenge"
+                    className="font-mono text-sm"
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Leave empty for an auto-generated URL. Use only lowercase letters, numbers, and hyphens.
+                </p>
+              </div>
+
               {/* Brand Color */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-900">Brand Color</label>
@@ -306,7 +330,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
               </div>
 
               {/* Description */}
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-20">
                 <label className="text-sm font-medium text-gray-900">
                   Challenge Description <span className="text-red-500">*</span>
                 </label>
@@ -323,7 +347,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
               </div>
 
               {/* Support Info */}
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-10">
                 <label className="text-sm font-medium text-gray-900">
                   Support Info <span className="font-normal text-gray-500">(optional)</span>
                 </label>
