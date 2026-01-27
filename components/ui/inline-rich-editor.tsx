@@ -467,45 +467,13 @@ export function InlineRichEditor({
             </ToolbarButton>
             
             {showColorPicker && (
-              <div className="absolute top-full mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-3 w-48 right-0 md:left-0 md:right-auto">
-                <div className="grid grid-cols-4 gap-1 mb-2">
-                  {COLOR_PRESETS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setTextColor(color)}
-                      className={cn(
-                        "w-8 h-8 rounded border-2 transition-transform hover:scale-110",
-                        currentColor === color ? "border-blue-500" : "border-transparent"
-                      )}
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                  <input
-                    type="color"
-                    value={customColor}
-                    onChange={(e) => setCustomColor(e.target.value)}
-                    className="w-8 h-8 rounded cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={customColor}
-                    onChange={(e) => setCustomColor(e.target.value)}
-                    placeholder="#000000"
-                    className="flex-1 h-8 px-2 text-xs border border-gray-200 rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setTextColor(customColor)}
-                    className="h-8 px-2 text-xs font-medium bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
+              <ColorPickerDropdown
+                currentColor={currentColor}
+                customColor={customColor}
+                onColorChange={setTextColor}
+                onCustomColorChange={setCustomColor}
+                onClose={() => setShowColorPicker(false)}
+              />
             )}
           </div>
 
@@ -876,6 +844,97 @@ function ClearFormatIcon({ className }: { className?: string }) {
     </svg>
   )
 }
+
+// =============================================================================
+// Color Picker Dropdown - Fixed positioning to avoid clipping
+// =============================================================================
+
+interface ColorPickerDropdownProps {
+  currentColor: string
+  customColor: string
+  onColorChange: (color: string) => void
+  onCustomColorChange: (color: string) => void
+  onClose: () => void
+}
+
+function ColorPickerDropdown({
+  currentColor,
+  customColor,
+  onColorChange,
+  onCustomColorChange,
+  onClose,
+}: ColorPickerDropdownProps) {
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [position, setPosition] = useState<'below' | 'above'>('below')
+
+  useEffect(() => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      
+      // If dropdown would overflow below viewport, show above
+      if (rect.bottom > viewportHeight - 20) {
+        setPosition('above')
+      }
+    }
+  }, [])
+
+  return (
+    <div 
+      ref={dropdownRef}
+      className={cn(
+        "absolute z-[100] bg-white rounded-lg shadow-xl border border-gray-200 p-3 w-48",
+        position === 'above' 
+          ? "bottom-full mb-1" 
+          : "top-full mt-1",
+        "right-0 sm:left-0 sm:right-auto"
+      )}
+      style={{ maxWidth: 'calc(100vw - 32px)' }}
+    >
+      <div className="grid grid-cols-4 gap-1 mb-2">
+        {COLOR_PRESETS.map((color) => (
+          <button
+            key={color}
+            type="button"
+            onClick={() => onColorChange(color)}
+            className={cn(
+              "w-8 h-8 rounded border-2 transition-transform hover:scale-110",
+              currentColor === color ? "border-blue-500" : "border-transparent"
+            )}
+            style={{ backgroundColor: color }}
+            title={color}
+          />
+        ))}
+      </div>
+      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+        <input
+          type="color"
+          value={customColor}
+          onChange={(e) => onCustomColorChange(e.target.value)}
+          className="w-8 h-8 rounded cursor-pointer"
+        />
+        <input
+          type="text"
+          value={customColor}
+          onChange={(e) => onCustomColorChange(e.target.value)}
+          placeholder="#000000"
+          className="flex-1 h-8 px-2 text-xs border border-gray-200 rounded"
+        />
+        <button
+          type="button"
+          onClick={() => onColorChange(customColor)}
+          className="h-8 px-2 text-xs font-medium bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// Icons
+// =============================================================================
 
 function CodeIcon({ className }: { className?: string }) {
   return (

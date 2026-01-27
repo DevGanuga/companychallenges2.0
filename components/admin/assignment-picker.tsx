@@ -59,6 +59,7 @@ export function AssignmentPicker({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [versionLabel, setVersionLabel] = useState('')
+  const [saveToLibrary, setSaveToLibrary] = useState(false) // Default to NOT saving
   const [isCreatingVersion, setIsCreatingVersion] = useState(false)
 
   const selectedAssignment = useMemo(() =>
@@ -109,7 +110,8 @@ export function AssignmentPicker({
         selectedId,
         challengeId,
         versionLabel,
-        sprintId
+        sprintId,
+        saveToLibrary
       )
 
       if (result.success) {
@@ -130,7 +132,8 @@ export function AssignmentPicker({
     setSearchQuery('')
     setSelectedId(null)
     setStep('select')
-    setVersionLabel('Version')
+    setVersionLabel('')
+    setSaveToLibrary(false)
     onClose()
   }
 
@@ -330,6 +333,16 @@ export function AssignmentPicker({
                       Name this version to differentiate it (e.g., "Dutch", "Client A", "Simplified")
                     </p>
                   </div>
+
+                  <label className="mt-3 flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={saveToLibrary}
+                      onChange={(e) => setSaveToLibrary(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                    />
+                    <span className="text-sm text-[var(--color-fg)]">Save to library for future use</span>
+                  </label>
 
                   <Button
                     className="mt-3"

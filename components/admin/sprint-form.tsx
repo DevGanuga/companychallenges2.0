@@ -6,7 +6,7 @@ import {
   Input,
   Textarea,
   Dialog,
-  DialogContent,
+  
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -163,7 +163,7 @@ export function SprintForm({ challengeId, sprint, open, onClose, onSuccess }: Sp
           </DialogDescription>
         </DialogHeader>
 
-        <DialogContent className="space-y-4">
+        <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
           {error && (
             <div className="rounded-[var(--radius-md)] bg-[var(--color-error-subtle)] p-3 text-sm text-[var(--color-error)]">
               {error}
@@ -340,7 +340,7 @@ export function SprintForm({ challengeId, sprint, open, onClose, onSuccess }: Sp
             </div>
           </div>
 
-        </DialogContent>
+        </div>
 
         <DialogFooter>
           <Button type="button" variant="secondary" onClick={handleClose} disabled={loading}>
@@ -372,4 +372,5 @@ function SaveIcon({ className }: { className?: string }) {
     </svg>
   )
 }
+
 

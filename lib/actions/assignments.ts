@@ -434,7 +434,8 @@ export async function createAssignmentVersion(
   sourceAssignmentId: string,
   challengeId: string,
   relationshipLabel: string = 'Version',
-  sprintId?: string | null
+  sprintId?: string | null,
+  saveToLibrary: boolean = false
 ): Promise<AssignmentActionResult> {
   try {
     const supabase = createAdminClient()
@@ -462,12 +463,14 @@ export async function createAssignmentVersion(
         public_title: source.public_title,
         subtitle: source.subtitle,
         instructions: source.instructions,
+        instructions_html: source.instructions_html,
         content: source.content,
+        content_html: source.content_html,
         visual_url: source.visual_url,
         media_url: source.media_url,
         password_hash: null, // Don't copy password
         content_type: source.content_type,
-        is_reusable: true,
+        is_reusable: saveToLibrary,
         tags: source.tags || [],
       })
       .select()

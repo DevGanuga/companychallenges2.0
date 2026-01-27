@@ -511,7 +511,7 @@ export function ChallengeDetailClient({
                     usage={usage}
                     index={index}
                     actionId={actionId}
-                    showQuizButton={features.micro_quizzes}
+                    showQuizButton={usage.assignment.content_type === 'quiz' || features.micro_quizzes}
                     challengeSlug={challenge.slug}
                     brandColor={challenge.brand_color || '#3b82f6'}
                     onEditSettings={() => setEditingUsage(usage)}

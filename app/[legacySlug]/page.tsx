@@ -1,20 +1,25 @@
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/server'
+
+// Import the actual page components
+import ChallengePage from '@/app/(public)/c/[slug]/page'
+import AssignmentPage from '@/app/(public)/a/[slug]/page'
 
 interface LegacySlugPageProps {
   params: Promise<{ legacySlug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 /**
- * Legacy URL Support
+ * Root-level URL Support
  * 
- * Handles URLs like /MMXdXcr (from legacy app) and redirects to /c/[slug]
- * This allows existing links from the old platform to continue working.
+ * Serves challenges and assignments directly at /MMXdXcr (no /c/ or /a/ prefix)
+ * This supports legacy URLs from the old platform.
  */
-export default async function LegacySlugPage({ params }: LegacySlugPageProps) {
+export default async function LegacySlugPage({ params, searchParams }: LegacySlugPageProps) {
   const { legacySlug } = await params
 
-  // Skip certain paths that shouldn't be treated as legacy slugs
+  // Skip certain paths that shouldn't be treated as slugs
   const reservedPaths = [
     'admin', 'participant', 'sign-in', 'sign-up', 'api', 
     'c', 'a', '_next', 'favicon.ico', 'favicon.svg'
@@ -34,7 +39,8 @@ export default async function LegacySlugPage({ params }: LegacySlugPageProps) {
     .single()
 
   if (challenge) {
-    redirect(`/c/${challenge.slug}`)
+    // Render the challenge page directly (no redirect!)
+    return <ChallengePage params={Promise.resolve({ slug: legacySlug })} />
   }
 
   // Check if this slug exists as an assignment
@@ -45,18 +51,47 @@ export default async function LegacySlugPage({ params }: LegacySlugPageProps) {
     .single()
 
   if (assignment) {
-    redirect(`/a/${assignment.slug}`)
+    // Render the assignment page directly (no redirect!)
+    return <AssignmentPage params={Promise.resolve({ slug: legacySlug })} searchParams={searchParams} />
   }
 
   // No matching challenge or assignment found
   notFound()
 }
 
-// Generate metadata for SEO
+// Generate metadata dynamically based on what we find
 export async function generateMetadata({ params }: LegacySlugPageProps) {
   const { legacySlug } = await params
+  
+  const supabase = createAdminClient()
+
+  // Check challenge
+  const { data: challenge } = await supabase
+    .from('challenges')
+    .select('public_title, internal_name')
+    .eq('slug', legacySlug)
+    .single()
+
+  if (challenge) {
+    return {
+      title: challenge.public_title || challenge.internal_name || 'Challenge',
+    }
+  }
+
+  // Check assignment
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('public_title, internal_title')
+    .eq('slug', legacySlug)
+    .single()
+
+  if (assignment) {
+    return {
+      title: assignment.public_title || assignment.internal_title || 'Assignment',
+    }
+  }
+
   return {
-    title: `Redirecting... | ${legacySlug}`,
-    robots: 'noindex, nofollow' // Don't index redirect pages
+    title: 'Not Found',
   }
 }

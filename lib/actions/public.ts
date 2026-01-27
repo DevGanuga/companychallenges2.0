@@ -139,6 +139,82 @@ export async function checkAssignmentAccess(assignmentId: string): Promise<boole
   }
 }
 
+/**
+ * Verify password for a sprint
+ * NOTE: Sprint passwords do NOT set a session cookie.
+ * Users must re-enter the password each visit (they need their scratch card).
+ */
+export async function verifySprintPassword(
+  sprintId: string,
+  password: string
+): Promise<PasswordVerifyResult> {
+  try {
+    // Rate limit by sprint ID
+    const rateLimitKey = `sprint_password:${sprintId}`
+    const rateCheck = checkRateLimit(rateLimitKey)
+
+    if (!rateCheck.allowed) {
+      return {
+        success: false,
+        error: `Too many attempts. Please try again in ${rateCheck.retryAfter} seconds.`,
+        retryAfter: rateCheck.retryAfter
+      }
+    }
+
+    const supabase = createAdminClient()
+
+    // Get the sprint's password hash
+    const { data: sprint, error: fetchError } = await supabase
+      .from('sprints')
+      .select('password_hash')
+      .eq('id', sprintId)
+      .single()
+
+    if (fetchError || !sprint) {
+      return { success: false, error: 'Sprint not found' }
+    }
+
+    if (!sprint.password_hash) {
+      // No password required
+      return { success: true }
+    }
+
+    // Normalize password to lowercase for case-insensitive matching
+    const normalizedPassword = password.toLowerCase().trim()
+    const storedHash = sprint.password_hash
+
+    // Check if using fallback encoding (from when RPC wasn't available)
+    if (storedHash.startsWith('fallback:')) {
+      const storedPassword = atob(storedHash.slice(9))
+      if (normalizedPassword !== storedPassword) {
+        return { success: false, error: 'Incorrect password. Please try again.' }
+      }
+    } else {
+      // Verify password using database function
+      const { data: isValid, error: verifyError } = await supabase.rpc('verify_password', {
+        password: normalizedPassword,
+        hash: storedHash
+      })
+
+      if (verifyError) {
+        console.error('Sprint password verification error:', verifyError)
+        return { success: false, error: 'Failed to verify password. Please try again.' }
+      }
+
+      if (!isValid) {
+        return { success: false, error: 'Incorrect password. Please try again.' }
+      }
+    }
+
+    // NO COOKIE SET - user must re-enter password each visit
+    // This ensures they keep their scratch card handy
+    return { success: true }
+  } catch (err) {
+    console.error('Unexpected error verifying sprint password:', err)
+    return { success: false, error: 'Failed to verify password' }
+  }
+}
+
 export type PublicAssignmentResult =
   | { success: true; data: { assignment: Assignment; requiresPassword: boolean; hasAccess: boolean; isReleased: boolean; releaseAt?: string } }
   | { success: false; error: string }

@@ -251,19 +251,25 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
               )}
 
               {/* Internal Name */}
-              <Input
-                label="Internal Name"
-                value={internalName}
-                onChange={(e) => setInternalName(e.target.value)}
-                placeholder="e.g. Q1 2026 Leadership Challenge"
-                required
-                autoFocus
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-900">
+                  Internal Name <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={internalName}
+                  onChange={(e) => setInternalName(e.target.value)}
+                  placeholder="e.g. Q1 2026 Leadership Challenge"
+                  required
+                  autoFocus
+                />
+              </div>
 
               {/* Public Title */}
               <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-900">
+                  Public Title <span className="text-red-500">*</span>
+                </label>
                 <Input
-                  label="Public Title"
                   value={publicTitle}
                   onChange={(e) => setPublicTitle(e.target.value)}
                   placeholder="e.g. Leadership Development Program"
@@ -289,13 +295,13 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
                   <span className="text-sm text-gray-500 whitespace-nowrap">/c/</span>
                   <Input
                     value={customSlug}
-                    onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="my-challenge"
+                    onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
+                    placeholder="MMXdXcr"
                     className="font-mono text-sm"
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  Leave empty for an auto-generated URL. Use only lowercase letters, numbers, and hyphens.
+                  Leave empty for auto-generated URL. Case-sensitive (preserves legacy URLs like MMXdXcr).
                 </p>
               </div>
 
@@ -467,7 +473,11 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
                 <Button type="button" variant="secondary" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting || !internalName.trim()}>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || !internalName.trim() || !publicTitle.trim() || !descriptionHtml.trim()}
+                  title={!internalName.trim() || !publicTitle.trim() || !descriptionHtml.trim() ? 'Please fill in all required fields' : undefined}
+                >
                   {isSubmitting ? (
                     <>
                       <Spinner size="sm" className="mr-2" />

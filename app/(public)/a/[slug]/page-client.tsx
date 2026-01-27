@@ -591,11 +591,8 @@ export function AssignmentPageClient({
               onLoad={handleMediaPlay}
             />
           ) : (
-            <video
+            <VideoPlayer
               src={assignment.media_url}
-              controls
-              autoPlay
-              className="h-full w-full"
               onPlay={handleMediaPlay}
             />
           )}
@@ -701,6 +698,87 @@ function CheckIcon({ className }: { className?: string }) {
     </svg>
   )
 }
+
+// =============================================================================
+// Video Player Component with MIME type handling
+// =============================================================================
+
+interface VideoPlayerProps {
+  src: string
+  onPlay?: () => void
+}
+
+function VideoPlayer({ src, onPlay }: VideoPlayerProps) {
+  const [error, setError] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Determine MIME type from URL extension
+  const getMimeType = (url: string): string => {
+    const ext = url.split('.').pop()?.toLowerCase().split('?')[0]
+    const mimeTypes: Record<string, string> = {
+      'mp4': 'video/mp4',
+      'webm': 'video/webm',
+      'ogg': 'video/ogg',
+      'ogv': 'video/ogg',
+      'mov': 'video/quicktime',
+      'm4v': 'video/mp4',
+    }
+    return mimeTypes[ext || ''] || 'video/mp4'
+  }
+
+  const mimeType = getMimeType(src)
+
+  if (error) {
+    return (
+      <div className="h-full w-full flex flex-col items-center justify-center bg-gray-900 text-white p-8">
+        <svg className="h-16 w-16 text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+        </svg>
+        <p className="text-lg font-medium mb-2">Video cannot be played</p>
+        <p className="text-sm text-gray-400 text-center max-w-md mb-4">
+          Your browser may not support this video format. Try downloading the video or using a different browser.
+        </p>
+        <a
+          href={src}
+          download
+          className="px-4 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+        >
+          Download Video
+        </a>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative h-full w-full">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+          <div className="animate-spin h-8 w-8 border-2 border-white border-t-transparent rounded-full" />
+        </div>
+      )}
+      <video
+        controls
+        autoPlay
+        className="h-full w-full"
+        onPlay={onPlay}
+        onLoadedData={() => setLoading(false)}
+        onError={() => {
+          setError(true)
+          setLoading(false)
+        }}
+      >
+        <source src={src} type={mimeType} />
+        {/* Fallback for browsers that need explicit type */}
+        {mimeType === 'video/mp4' && <source src={src} type="video/mp4; codecs=avc1" />}
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  )
+}
+
+// =============================================================================
+// Icons
+// =============================================================================
 
 function CheckCircleIcon({ className }: { className?: string }) {
   return (

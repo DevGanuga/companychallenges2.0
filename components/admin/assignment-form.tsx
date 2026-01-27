@@ -366,12 +366,12 @@ export function AssignmentForm({
                     <input
                       type="text"
                       value={customSlug}
-                      onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                      placeholder="my-assignment"
+                      onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
+                      placeholder="MMXdXcr"
                       className="flex-1 h-10 px-3 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
-                  <p className="text-xs text-gray-500">Leave empty for auto-generated URL</p>
+                  <p className="text-xs text-gray-500">Leave empty for auto-generated URL. Case-sensitive.</p>
                 </div>
               </div>
 
