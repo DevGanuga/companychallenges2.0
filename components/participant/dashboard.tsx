@@ -267,7 +267,7 @@ function ChallengeCard({ enrollment }: { enrollment: EnrolledChallengeWithProgre
   
   return (
     <Link 
-      href={`/c/${challenge?.slug}`}
+      href={`/${challenge?.slug}`}
       className="block bg-white rounded-xl border border-gray-200 p-5 transition-all hover:shadow-md hover:border-gray-300"
     >
       <div className="flex items-start gap-4">

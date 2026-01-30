@@ -98,7 +98,7 @@ export function AssignmentList({ assignments, onEdit, onRefresh, onTagClick }: A
   }
 
   const copyUrl = (slug: string) => {
-    const url = `${window.location.origin}/a/${slug}`
+    const url = `${window.location.origin}/${slug}`
     navigator.clipboard.writeText(url)
   }
 

@@ -87,7 +87,7 @@ export function ChallengePageClient({
                 {/* Start Button */}
                 {hasAssignments && (
                   <Link
-                    href={`/c/${challenge.slug}/start`}
+                    href={`/${challenge.slug}/start`}
                     className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
                     style={{ 
                       backgroundColor: brandColor,

@@ -204,6 +204,28 @@ export function ChallengeDetailClient({
     }
   }
 
+  const handleSprintChange = async (usageId: string, sprintId: string | null) => {
+    setActionId(usageId)
+
+    try {
+      const result = await updateAssignmentUsage(usageId, {
+        sprint_id: sprintId,
+      })
+
+      if (result.success) {
+        setUsages(usages.map((u) =>
+          u.id === usageId ? { ...u, sprint_id: sprintId } : u
+        ))
+      } else {
+        setError(result.error ?? 'Failed to assign sprint')
+      }
+    } catch (err) {
+      setError('Failed to assign sprint')
+    } finally {
+      setActionId(null)
+    }
+  }
+
   const handleEditSuccess = () => {
     router.refresh()
   }
@@ -280,7 +302,7 @@ export function ChallengeDetailClient({
               </h1>
               <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
                 <code className="px-2 py-0.5 bg-gray-100 rounded font-mono text-gray-700">
-                  /c/{challenge.slug}
+                  /{challenge.slug}
                 </code>
                 {challenge.folder && (
                   <span className="flex items-center gap-1">
@@ -301,7 +323,7 @@ export function ChallengeDetailClient({
               Edit Challenge
             </button>
             <a
-              href={`/c/${challenge.slug}`}
+              href={`/${challenge.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
@@ -365,6 +387,7 @@ export function ChallengeDetailClient({
               <SprintList
                 sprints={sprints}
                 usages={usages}
+                challengeSlug={challenge.slug}
                 onEdit={handleEditSprint}
                 onRefresh={handleSprintRefresh}
               />
@@ -511,9 +534,10 @@ export function ChallengeDetailClient({
                     usage={usage}
                     index={index}
                     actionId={actionId}
-                    showQuizButton={usage.assignment.content_type === 'quiz' || features.micro_quizzes}
+                    showQuizButton={usage.assignment.content_type === 'quiz'}
                     challengeSlug={challenge.slug}
                     brandColor={challenge.brand_color || '#3b82f6'}
+                    sprints={sprints}
                     onEditSettings={() => setEditingUsage(usage)}
                     onEditContent={() => {
                       const fullAssignment = allAssignments.find(a => a.id === usage.assignment_id)
@@ -525,6 +549,7 @@ export function ChallengeDetailClient({
                     onQuiz={() => setQuizEditorUsage(usage)}
                     onToggleVisibility={() => handleToggleVisibility(usage)}
                     onRemove={() => handleRemoveAssignment(usage.id, usage.assignment.internal_title)}
+                    onSprintChange={(sprintId) => handleSprintChange(usage.id, sprintId)}
                   />
                 ))}
               </div>
@@ -659,11 +684,13 @@ interface SortableAssignmentRowProps {
   showQuizButton: boolean
   challengeSlug: string
   brandColor: string
+  sprints: Sprint[]
   onEditSettings: () => void
   onEditContent: () => void
   onQuiz: () => void
   onToggleVisibility: () => void
   onRemove: () => void
+  onSprintChange: (sprintId: string | null) => void
 }
 
 function SortableAssignmentRow({
@@ -673,11 +700,13 @@ function SortableAssignmentRow({
   showQuizButton,
   challengeSlug,
   brandColor,
+  sprints,
   onEditSettings,
   onEditContent,
   onQuiz,
   onToggleVisibility,
   onRemove,
+  onSprintChange,
 }: SortableAssignmentRowProps) {
   const {
     attributes,
@@ -696,6 +725,7 @@ function SortableAssignmentRow({
   const assignment = usage.assignment
   const isHidden = !usage.is_visible
   const isScheduled = usage.release_at && new Date(usage.release_at) > new Date()
+  const assignedSprint = sprints.find(s => s.id === usage.sprint_id)
 
   return (
     <div
@@ -756,6 +786,11 @@ function SortableAssignmentRow({
               🏆 Milestone
             </span>
           )}
+          {assignedSprint && (
+            <span className="px-2 py-0.5 rounded bg-purple-100 text-xs font-medium text-purple-700">
+              📦 {assignedSprint.name}
+            </span>
+          )}
         </div>
         {assignment.public_title && (
           <p className="text-sm text-gray-500 truncate mt-0.5">{assignment.public_title}</p>
@@ -764,6 +799,21 @@ function SortableAssignmentRow({
 
       {/* Actions - Always visible for clarity */}
       <div className="flex items-center gap-1">
+        {/* Sprint selector dropdown */}
+        {sprints.length > 0 && (
+          <select
+            value={usage.sprint_id || ''}
+            onChange={(e) => onSprintChange(e.target.value || null)}
+            disabled={actionId === usage.id}
+            className="h-8 px-2 text-xs rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
+            title="Assign to sprint"
+          >
+            <option value="">No Sprint</option>
+            {sprints.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        )}
         <ActionButton onClick={onEditContent} title="Edit content" disabled={actionId === usage.id}>
           <EditIcon className="h-4 w-4" />
         </ActionButton>
@@ -777,7 +827,7 @@ function SortableAssignmentRow({
         )}
         <ActionButton
           onClick={() => {
-            const url = `${window.location.origin}/a/${assignment.slug}`
+            const url = `${window.location.origin}/${assignment.slug}`
             navigator.clipboard.writeText(url)
           }}
           title="Copy link"
@@ -786,7 +836,7 @@ function SortableAssignmentRow({
           <CopyIcon className="h-4 w-4" />
         </ActionButton>
         <a
-          href={`/a/${assignment.slug}?from=${challengeSlug}`}
+          href={`/${assignment.slug}?from=${challengeSlug}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"

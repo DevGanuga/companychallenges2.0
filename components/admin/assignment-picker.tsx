@@ -32,18 +32,6 @@ const CONTENT_TYPE_BADGES: Record<string, { label: string; variant: 'default' | 
   announcement: { label: 'Announcement', variant: 'outline' },
 }
 
-const VERSION_LABELS = [
-  'Version',
-  'English version',
-  'French version',
-  'Dutch version',
-  'German version',
-  'Beginner version',
-  'Advanced version',
-  'Short version',
-  'Extended version',
-]
-
 type Step = 'select' | 'choose-action'
 
 export function AssignmentPicker({

@@ -41,7 +41,7 @@ export default function BrowseChallengesPage() {
     const result = await enrollInChallenge(challengeId)
     if (result.success) {
       // Navigate to the challenge
-      window.location.href = `/c/${slug}`
+      window.location.href = `/${slug}`
     }
     setEnrolling(null)
   }

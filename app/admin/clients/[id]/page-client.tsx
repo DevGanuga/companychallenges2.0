@@ -261,8 +261,8 @@ function ChallengeRow({
   const [copied, setCopied] = useState(false)
 
   const getPublicUrl = () => {
-    if (typeof window === 'undefined') return `/c/${challenge.slug}`
-    return `${window.location.origin}/c/${challenge.slug}`
+    if (typeof window === 'undefined') return `/${challenge.slug}`
+    return `${window.location.origin}/${challenge.slug}`
   }
 
   const copyUrl = () => {
@@ -358,7 +358,7 @@ function ChallengeRow({
         <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex items-center gap-2">
           <LinkIcon className="h-4 w-4 text-[var(--color-fg-subtle)] flex-shrink-0" />
           <code className="text-xs font-mono text-[var(--color-fg-muted)] bg-[var(--color-bg-muted)] px-2 py-1 rounded truncate">
-            /c/{challenge.slug}
+            /{challenge.slug}
           </code>
           <button
             onClick={copyUrl}

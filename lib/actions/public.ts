@@ -515,7 +515,8 @@ export async function getAssignmentWithContext(
     const { data: challenge, error: challengeError } = await supabase
       .from('challenges')
       .select(`
-        id, client_id, slug, public_title, internal_name, brand_color, support_info,
+        id, client_id, slug, public_title, internal_name, brand_color, support_info, 
+        contact_info, password_instructions, mode,
         client:clients (
           name,
           logo_url
@@ -637,11 +638,10 @@ export async function getAssignmentWithContext(
             publicTitle: challenge.public_title || undefined,
             internalName: challenge.internal_name,
             brandColor: challenge.brand_color || undefined,
-            mode: (challenge as any).mode || 'collective',
+            mode: challenge.mode || 'collective',
             supportInfo: challenge.support_info || undefined,
-            // These fields may not exist in older databases
-            contactInfo: (challenge as any).contact_info || undefined,
-            passwordInstructions: (challenge as any).password_instructions || undefined
+            contactInfo: challenge.contact_info || undefined,
+            passwordInstructions: challenge.password_instructions || undefined
           },
           client: (challenge as any).client ? {
             name: (challenge as any).client.name,

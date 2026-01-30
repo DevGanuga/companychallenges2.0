@@ -267,7 +267,7 @@ export function AssignmentForm({
 
   if (!open) return null
 
-  const previewUrl = isEditing && assignment ? `/a/${assignment.slug}` : null
+  const previewUrl = isEditing && assignment ? `/${assignment.slug}` : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -286,7 +286,7 @@ export function AssignmentForm({
               </h2>
               {isEditing && assignment && (
                 <p className="text-sm text-gray-500 mt-0.5">
-                  URL: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">/a/{assignment.slug}</code>
+                  URL: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">/{assignment.slug}</code>
                 </p>
               )}
             </div>
@@ -362,7 +362,7 @@ export function AssignmentForm({
                     Custom URL <span className="font-normal text-gray-500">(optional)</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 whitespace-nowrap">/a/</span>
+                    <span className="text-sm text-gray-500 whitespace-nowrap">/</span>
                     <input
                       type="text"
                       value={customSlug}
@@ -475,24 +475,50 @@ export function AssignmentForm({
                   />
                 </div>
 
-                {/* Video/Media */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-900">Video URL</label>
-                  <Input
-                    value={mediaUrl}
-                    onChange={(e) => setMediaUrl(e.target.value)}
-                    placeholder="YouTube, Vimeo, or direct URL"
-                  />
-                  <p className="text-xs text-gray-500">Or upload a video file:</p>
-                  <input
-                    ref={mediaInputRef}
-                    type="file"
-                    accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov"
-                    onChange={handleMediaUpload}
-                    className="text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                  />
-                  {isUploadingMedia && <Spinner size="sm" />}
-                </div>
+                {/* Video/Media - Show for standard and video types */}
+                {(contentType === 'standard' || contentType === 'video') && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-900">
+                      Video URL {contentType === 'video' && <span className="text-blue-500 font-normal">(Featured)</span>}
+                    </label>
+                    <Input
+                      value={mediaUrl}
+                      onChange={(e) => setMediaUrl(e.target.value)}
+                      placeholder="YouTube, Vimeo, or direct URL"
+                    />
+                    <p className="text-xs text-gray-500">Or upload a video file:</p>
+                    <input
+                      ref={mediaInputRef}
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov"
+                      onChange={handleMediaUpload}
+                      className="text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                    />
+                    {isUploadingMedia && <Spinner size="sm" />}
+                  </div>
+                )}
+
+                {/* Quiz type info */}
+                {contentType === 'quiz' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-900">Quiz Content</label>
+                    <div className="rounded-lg bg-blue-50 border border-blue-100 p-4 text-sm text-blue-700">
+                      <p className="font-medium mb-1">Quiz Questions</p>
+                      <p className="text-blue-600">After saving, use the &ldquo;Quizzes&rdquo; button in the assignment list to add quiz questions.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Announcement type info */}
+                {contentType === 'announcement' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-900">Announcement</label>
+                    <div className="rounded-lg bg-amber-50 border border-amber-100 p-4 text-sm text-amber-700">
+                      <p className="font-medium mb-1">Informational Content</p>
+                      <p className="text-amber-600">Announcements don&apos;t require completion. Use them for updates, news, or informational content.</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Tags */}
@@ -518,7 +544,7 @@ export function AssignmentForm({
                   data-lpignore="true"
                 />
                 <p className="text-xs text-gray-500">
-                  Password is visible because it's for gamification, not security. Case-insensitive.
+                  Password is visible because it&apos;s for gamification, not security. Case-insensitive.
                 </p>
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
                   <input

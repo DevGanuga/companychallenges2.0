@@ -254,7 +254,7 @@ export function VariantEditor({ assignment, onClose }: VariantEditorProps) {
                                 {getRelationDescription(variant)}
                               </p>
                               <Link
-                                href={`/a/${related.slug}`}
+                                href={`/${related.slug}`}
                                 target="_blank"
                                 className="font-medium text-[var(--color-accent)] hover:underline"
                               >

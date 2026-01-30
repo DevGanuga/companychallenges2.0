@@ -97,7 +97,7 @@ export default function ChallengesPage() {
             return (
               <Link
                 key={enrollment.id}
-                href={`/c/${challenge?.slug}`}
+                href={`/${challenge?.slug}`}
                 className="block bg-white rounded-xl border border-gray-200 p-6 transition-all hover:shadow-lg hover:border-gray-300"
               >
                 <div className="flex items-start gap-5">

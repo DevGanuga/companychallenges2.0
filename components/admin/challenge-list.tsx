@@ -80,15 +80,15 @@ export function ChallengeList({ challenges, onEdit, onRefresh }: ChallengeListPr
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const copyUrl = (challenge: ChallengeWithClient) => {
-    const url = `${window.location.origin}/c/${challenge.slug}`
+    const url = `${window.location.origin}/${challenge.slug}`
     navigator.clipboard.writeText(url)
     setCopiedId(challenge.id)
     setTimeout(() => setCopiedId(null), 2000)
   }
 
   const getPublicUrl = (slug: string) => {
-    if (typeof window === 'undefined') return `/c/${slug}`
-    return `${window.location.origin}/c/${slug}`
+    if (typeof window === 'undefined') return `/${slug}`
+    return `${window.location.origin}/${slug}`
   }
 
   if (challenges.length === 0) {
@@ -150,7 +150,7 @@ export function ChallengeList({ challenges, onEdit, onRefresh }: ChallengeListPr
                     <span className="text-gray-300">•</span>
                     <div className="flex items-center gap-1.5">
                       <code className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                        /c/{challenge.slug}
+                        /{challenge.slug}
                       </code>
                       <button
                         onClick={() => copyUrl(challenge)}
@@ -205,15 +205,14 @@ export function ChallengeList({ challenges, onEdit, onRefresh }: ChallengeListPr
                 >
                   {challenge.is_archived ? 'Restore' : 'Archive'}
                 </button>
-                {challenge.is_archived && (
-                  <button
-                    onClick={() => handleDelete(challenge)}
-                    disabled={actionId === challenge.id}
-                    className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    Delete
-                  </button>
-                )}
+                <button
+                  onClick={() => handleDelete(challenge)}
+                  disabled={actionId === challenge.id}
+                  className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                  title="Permanently delete this challenge"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           </div>

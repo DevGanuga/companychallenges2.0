@@ -179,7 +179,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
 
   if (!open) return null
 
-  const previewUrl = isEditing && challenge ? `/c/${challenge.slug}` : null
+  const previewUrl = isEditing && challenge ? `/${challenge.slug}` : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -198,7 +198,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
               </h2>
               {isEditing && challenge && (
                 <p className="text-sm text-gray-500 mt-0.5">
-                  URL: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">/c/{challenge.slug}</code>
+                  URL: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">/{challenge.slug}</code>
                 </p>
               )}
             </div>
@@ -292,7 +292,7 @@ export function ChallengeForm({ challenge, clientId, clients, open, onClose, onS
                   Custom URL <span className="font-normal text-gray-500">(optional)</span>
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500 whitespace-nowrap">/c/</span>
+                  <span className="text-sm text-gray-500 whitespace-nowrap">/</span>
                   <Input
                     value={customSlug}
                     onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}

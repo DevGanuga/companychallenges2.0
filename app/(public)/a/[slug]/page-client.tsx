@@ -71,7 +71,7 @@ export function AssignmentPageClient({
   const isIndividualMode = challengeMode === 'individual' || challengeMode === 'hybrid'
   
   // Build back URL - only link to challenge if we have context
-  const backUrl = challengeSlug ? `/c/${challengeSlug}/start` : null
+  const backUrl = challengeSlug ? `/${challengeSlug}/start` : null
 
   // Check localStorage for existing completion on mount
   useEffect(() => {
@@ -562,18 +562,20 @@ export function AssignmentPageClient({
         >
           {isYouTubeUrl(assignment.media_url) ? (
             <iframe
-              src={`${getYouTubeEmbedUrl(assignment.media_url)}?autoplay=1`}
+              src={`${getYouTubeEmbedUrl(assignment.media_url)}?autoplay=1&rel=0`}
               className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              frameBorder="0"
               onLoad={handleMediaPlay}
             />
           ) : isVimeoUrl(assignment.media_url) ? (
             <iframe
-              src={`${getVimeoEmbedUrl(assignment.media_url)}?autoplay=1`}
+              src={`${getVimeoEmbedUrl(assignment.media_url)}${getVimeoEmbedUrl(assignment.media_url).includes('?') ? '&' : '?'}autoplay=1&title=0&byline=0&portrait=0`}
               className="h-full w-full"
-              allow="autoplay; fullscreen; picture-in-picture"
+              allow="autoplay; fullscreen; picture-in-picture; clipboard-write"
               allowFullScreen
+              frameBorder="0"
               onLoad={handleMediaPlay}
             />
           ) : isLoomUrl(assignment.media_url) ? (
@@ -648,8 +650,40 @@ function getYouTubeThumbnail(url: string): string | null {
 }
 
 function getVimeoEmbedUrl(url: string): string {
-  const match = url.match(/vimeo\.com\/(\d+)/)
-  return `https://player.vimeo.com/video/${match?.[1] || ''}`
+  // Handle various Vimeo URL formats:
+  // - https://vimeo.com/123456789
+  // - https://vimeo.com/123456789?h=abc123
+  // - https://vimeo.com/channels/staffpicks/123456789
+  // - https://player.vimeo.com/video/123456789
+  let videoId = ''
+  let hashParam = ''
+  
+  // Extract hash parameter if present (needed for private videos)
+  const urlObj = url.includes('?') ? new URL(url) : null
+  if (urlObj) {
+    hashParam = urlObj.searchParams.get('h') || ''
+  }
+  
+  // Try different patterns
+  const patterns = [
+    /vimeo\.com\/video\/(\d+)/,      // player.vimeo.com/video/123
+    /vimeo\.com\/(\d+)/,              // vimeo.com/123
+    /vimeo\.com\/channels\/[^/]+\/(\d+)/, // vimeo.com/channels/xxx/123
+  ]
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match) {
+      videoId = match[1]
+      break
+    }
+  }
+  
+  let embedUrl = `https://player.vimeo.com/video/${videoId}`
+  if (hashParam) {
+    embedUrl += `?h=${hashParam}`
+  }
+  return embedUrl
 }
 
 function getLoomEmbedUrl(url: string): string {
